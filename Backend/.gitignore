@@ -1,0 +1,26 @@
+# Environment variables — NEVER commit these (secrets live in .env).
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
