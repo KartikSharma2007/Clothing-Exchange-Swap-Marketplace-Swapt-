@@ -20,8 +20,26 @@ import {
 const router = Router();
 
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
-const GOOGLE_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
-const googleClient = GOOGLE_ID ? new OAuth2Client(GOOGLE_ID) : null;
+const GOOGLE_IDS = [...new Set([
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_ID_LEGACY,
+  process.env.VITE_GOOGLE_CLIENT_ID,
+].filter(Boolean))];
+
+const googleClients = GOOGLE_IDS.length ? GOOGLE_IDS.map((id) => new OAuth2Client(id)) : [];
+
+async function verifyGoogleIdToken(idToken) {
+  let lastErr;
+  for (const client of googleClients) {
+    try {
+      return await client.verifyIdToken({ idToken, audience: client._clientId || client.options.clientId || client._clientId });
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (lastErr) throw lastErr;
+  throw new Error("Google sign-in isn't configured on the server.");
+}
 
 /** True once the profile fields the marketplace requires (beyond what Google gives us) are filled in. */
 function googleProfileComplete(user) {
@@ -269,12 +287,12 @@ router.post("/dev-verify", async (req, res, next) => {
 
 router.post("/google", authLimiter, async (req, res, next) => {
   try {
-    if (!googleClient) return res.status(503).json({ error: "Google sign-in isn't configured on the server." });
+    if (!googleClients.length) return res.status(503).json({ error: "Google sign-in isn't configured on the server." });
 
     const idToken = String(req.body?.idToken || "");
     if (!idToken) return res.status(400).json({ error: "Missing Google ID token" });
 
-    const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_ID });
+    const ticket = await verifyGoogleIdToken(idToken);
     const payload = ticket.getPayload();
     if (!payload?.email) return res.status(401).json({ error: "Google didn't return an email address." });
     if (payload.email_verified === false) {
