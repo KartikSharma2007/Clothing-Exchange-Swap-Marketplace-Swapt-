@@ -27,15 +27,23 @@ const TTL = Number(process.env.CLOUDINARY_SIGNED_URL_TTL || 3600);
 // exact bug this fallback chain exists to prevent.
 const API_ORIGIN = process.env.API_ORIGIN || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 4000}`;
 
-if (process.env.NODE_ENV === "production" && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API_ORIGIN)) {
-  // Fail loud in the logs instead of silently shipping broken image URLs.
+// Always log the resolved value once at boot — check your Render service logs
+// for this line if images still aren't loading after a deploy.
+// eslint-disable-next-line no-console
+console.log(`[cloudinary] API_ORIGIN resolved to: ${API_ORIGIN}`);
+
+// `RENDER` is set to "true" by Render on every service it runs, regardless of
+// NODE_ENV — use that (not NODE_ENV) to detect "we are actually on Render but
+// still fell back to localhost", since NODE_ENV is easy to forget to set.
+if (process.env.RENDER && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API_ORIGIN)) {
   // eslint-disable-next-line no-console
   console.error(
-    "[cloudinary] WARNING: API_ORIGIN is not set and RENDER_EXTERNAL_URL was not found, " +
-      `so image URLs are falling back to "${API_ORIGIN}". These URLs will be unreachable ` +
-      "for anyone except a developer running a local backend on this exact port. " +
-      "Set API_ORIGIN to this service's public URL (e.g. https://your-app.onrender.com) " +
-      "in your Render environment variables.",
+    "[cloudinary] WARNING: running on Render but API_ORIGIN resolved to " +
+      `"${API_ORIGIN}". Neither API_ORIGIN nor RENDER_EXTERNAL_URL is set/visible ` +
+      "to this process. Every image URL served to clients right now is broken. " +
+      "Set API_ORIGIN explicitly in Render → your service → Environment to this " +
+      "service's public URL, e.g. https://your-app.onrender.com (no trailing slash), " +
+      "then redeploy.",
   );
 }
 
