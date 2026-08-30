@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
-  ArrowLeft, BadgeCheck, Bell, Camera, Check, Contrast, Eye, EyeOff, Globe, Loader2, Lock, Menu, Ruler, ShieldAlert, Trash2, User as UserIcon, X, ZoomIn, ZoomOut,
+  ArrowLeft, BadgeCheck, Bell, Camera, Check, Contrast, Eye, EyeOff, Globe, Loader2, Lock, Menu, Ruler, ShieldAlert, Trash2, User as UserIcon, X,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Protected } from "@/components/site/Protected";
+import { AvatarCropper, validateAvatarFile } from "@/components/site/AvatarCropper";
 import { useAuth } from "@/lib/auth-context";
 import { changePassword, deleteAccount, removeAvatar, saveProfile, uploadAvatar } from "@/lib/auth-api";
 import { ACCENTS, TEXT_SIZES, usePreferences } from "@/lib/preferences";
@@ -88,23 +89,23 @@ function SettingsPage() {
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl max-md:text-[26px] max-md:leading-none">Settings</h1>
         <p className="mt-1 text-sm text-foreground/60 max-md:text-[13px]">Manage your account, appearance and privacy.</p>
 
-        {/* Mobile hamburger — compact, not dominant */}
+        {/* Mobile hamburger — three-line button, hidden on PC */}
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open settings menu"
           aria-expanded={mobileOpen}
-          className="mt-4 inline-flex w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-[0.98] lg:hidden"
+          className="mt-5 inline-flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-[0.98] lg:hidden"
         >
-          <span className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-foreground text-background">
-              <Menu className="h-3.5 w-3.5" />
+          <span className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-foreground text-background">
+              <Menu className="h-4 w-4" />
             </span>
             <span className="flex flex-col items-start leading-none">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Section</span>
-              <span className="text-[13px] font-black">{TABS.find((t) => t.id === tab)?.label}</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-foreground/50">Section</span>
+              <span className="text-sm font-black">{TABS.find((t) => t.id === tab)?.label}</span>
             </span>
           </span>
-          <span className="flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-black text-brand">
+          <span className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs font-black text-brand">
             Menu <span className="text-[10px]">☰</span>
           </span>
         </button>
@@ -404,173 +405,6 @@ function AvatarCircle({ url, name, size = 96 }: { url?: string | null; name?: st
   );
 }
 
-const CROP_PREVIEW = 280;
-const CROP_EXPORT = 512;
-
-function clampCrop(crop: { x: number; y: number; size: number }, natW: number, natH: number) {
-  const size = Math.min(crop.size, natW, natH);
-  const x = Math.min(Math.max(crop.x, 0), Math.max(natW - size, 0));
-  const y = Math.min(Math.max(crop.y, 0), Math.max(natH - size, 0));
-  return { x, y, size };
-}
-
-/** Square crop modal — drag to pan, slider to zoom, exports a 512px JPEG. */
-function AvatarCropper({
-  file,
-  onCancel,
-  onDone,
-}: {
-  file: File;
-  onCancel: () => void;
-  onDone: (cropped: File) => Promise<void> | void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [img, setImg] = useState<HTMLImageElement | null>(null);
-  const [crop, setCrop] = useState({ x: 0, y: 0, size: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const drag = useRef<{ sx: number; sy: number; cx: number; cy: number } | null>(null);
-
-  useEffect(() => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      const size = Math.min(image.naturalWidth, image.naturalHeight);
-      setImg(image);
-      setCrop({
-        x: (image.naturalWidth - size) / 2,
-        y: (image.naturalHeight - size) / 2,
-        size,
-      });
-    };
-    image.src = url;
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
-
-  // Draw the crop preview into the canvas whenever it changes.
-  useEffect(() => {
-    if (!img || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    canvas.width = CROP_PREVIEW;
-    canvas.height = CROP_PREVIEW;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    ctx.clearRect(0, 0, CROP_PREVIEW, CROP_PREVIEW);
-    ctx.drawImage(img, crop.x, crop.y, crop.size, crop.size, 0, 0, CROP_PREVIEW, CROP_PREVIEW);
-  }, [img, crop]);
-
-  const handleZoom = (z: number) => {
-    if (!img) return;
-    const maxSize = Math.min(img.naturalWidth, img.naturalHeight);
-    const size = maxSize / z;
-    setZoom(z);
-    setCrop((c) => clampCrop({ ...c, size }, img.naturalWidth, img.naturalHeight));
-  };
-
-  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!img) return;
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    drag.current = { sx: e.clientX, sy: e.clientY, cx: crop.x, cy: crop.y };
-  };
-  const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drag.current || !img) return;
-    const scale = crop.size / CROP_PREVIEW;
-    const dx = (e.clientX - drag.current.sx) * scale;
-    const dy = (e.clientY - drag.current.sy) * scale;
-    setCrop((c) =>
-      clampCrop({ ...c, x: drag.current!.cx + dx, y: drag.current!.cy + dy }, img.naturalWidth, img.naturalHeight),
-    );
-  };
-  const onPointerUp = () => {
-    drag.current = null;
-  };
-
-  const apply = async () => {
-    if (!img) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = CROP_EXPORT;
-      canvas.height = CROP_EXPORT;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas isn't supported in this browser.");
-      ctx.drawImage(img, crop.x, crop.y, crop.size, crop.size, 0, 0, CROP_EXPORT, CROP_EXPORT);
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
-      if (!blob) throw new Error("Couldn't process the image.");
-      const cropped = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
-      await onDone(cropped);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't crop the image.");
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-sm animate-scale-in rounded-2xl border border-border bg-card p-5 shadow-2xl">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-black tracking-tight">Crop your photo</h3>
-          <button onClick={onCancel} className="rounded-full p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label="Cancel crop">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="mt-1 text-sm text-foreground/60">Drag to position — use the slider to zoom in and out.</p>
-
-        <div className="relative mt-4 overflow-hidden rounded-xl bg-black/90">
-          <canvas
-            ref={canvasRef}
-            className="block h-full w-full cursor-grab touch-none active:cursor-grabbing"
-            style={{ aspectRatio: "1 / 1", height: "100%", width: "100%", maxHeight: "min(60vh, 340px)" }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-          />
-          {!img && (
-            <div className="absolute inset-0 flex items-center justify-center text-xs text-white/70">Loading…</div>
-          )}
-        </div>
-
-        <div className="mt-4 flex items-center gap-3">
-          <ZoomOut className="h-4 w-4 shrink-0 text-foreground/50" />
-          <input
-            type="range"
-            min={1}
-            max={4}
-            step={0.01}
-            value={zoom}
-            onChange={(e) => handleZoom(Number(e.target.value))}
-            disabled={!img}
-            className="flex-1 accent-[var(--color-brand)]"
-            aria-label="Zoom"
-          />
-          <ZoomIn className="h-4 w-4 shrink-0 text-foreground/50" />
-        </div>
-
-        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-
-        <div className="mt-5 flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={apply}
-            disabled={busy || !img}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-foreground transition-all hover:-translate-y-0.5 hover:shadow-lg disabled:opacity-60"
-          >
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />} Apply
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Tabs ────────────────────────────────────────────────────── */
 
 function ProfileTab() {
@@ -647,10 +481,8 @@ function ProfileTab() {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    if (f.size > 8 * 1024 * 1024) return setAvatarError("Image must be under 8 MB.");
-    if (!["image/jpeg", "image/png", "image/webp", "image/avif"].includes(f.type)) {
-      return setAvatarError("Only JPEG, PNG, WebP or AVIF images are allowed.");
-    }
+    const validationError = validateAvatarFile(f);
+    if (validationError) return setAvatarError(validationError);
     setAvatarError(null);
     setAvatarOk(null);
     setCropFile(f);
@@ -1068,25 +900,25 @@ function SecurityTab() {
         <form onSubmit={submit} className="max-w-md space-y-4">
           <Labeled label="Current password">
             <div className="relative">
-              <input type={showCurrent ? "text" : "password"} className={`${input} pr-12`} value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} placeholder="Enter current password" autoComplete="current-password" />
-              <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showCurrent ? "Hide password" : "Show password"}>
-                {showCurrent ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              <input type={showCurrent ? "text" : "password"} className={`${input} pr-10`} value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} placeholder="Enter current password" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showCurrent ? "Hide password" : "Show password"}>
+                {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </Labeled>
           <Labeled label="New password" hint="8+ characters, one uppercase letter and one number.">
             <div className="relative">
-              <input type={showNext ? "text" : "password"} className={`${input} pr-12`} value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="Enter new password" autoComplete="new-password" />
-              <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showNext ? "Hide password" : "Show password"}>
-                {showNext ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              <input type={showNext ? "text" : "password"} className={`${input} pr-10`} value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="Enter new password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showNext ? "Hide password" : "Show password"}>
+                {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </Labeled>
           <Labeled label="Confirm new password">
             <div className="relative">
-              <input type={showConfirm ? "text" : "password"} className={`${input} pr-12`} value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} placeholder="Confirm new password" autoComplete="new-password" />
-              <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showConfirm ? "Hide password" : "Show password"}>
-                {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              <input type={showConfirm ? "text" : "password"} className={`${input} pr-10`} value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} placeholder="Confirm new password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showConfirm ? "Hide password" : "Show password"}>
+                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </Labeled>
@@ -1433,17 +1265,17 @@ function DangerTab() {
             <div className="relative">
               <input
                 type={showPw ? "text" : "password"}
-                className={`${input} pr-12`}
+                className={input}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
-                className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-foreground/50 transition-colors hover:text-foreground"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
-                {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </Labeled>

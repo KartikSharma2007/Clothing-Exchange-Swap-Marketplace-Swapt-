@@ -15,6 +15,7 @@ import { NotificationBell } from "@/components/site/NotificationBell";
 import { AccountMenu } from "@/components/site/AccountMenu";
 import { toast } from "sonner";
 import { uploadAvatar, removeAvatar } from "@/lib/auth-api";
+import { AvatarCropper, validateAvatarFile } from "@/components/site/AvatarCropper";
 import { CreditsModal } from "@/components/site/CreditsModal";
 import { ImpactCard } from "@/components/site/ImpactCard";
 import { useAuth } from "@/lib/auth-context";
@@ -22,7 +23,7 @@ import { fetchFollowerUsers, fetchFollowingUsers, fetchMyListings, fetchMySwapsP
 import { boostListing, deleteListing, setListingVisibility, publishListing } from "@/lib/listings-api";
 import { deleteConversation, startConversation } from "@/lib/swap-api";
 import { fetchSwapMatches, type SwapMatch } from "@/lib/matchmaking-api";
-import { apiEnabled } from "@/lib/api";
+import { apiEnabled, ApiError } from "@/lib/api";
 import { downloadApiCsv, toCsv } from "@/lib/csv";
 import { relativeTime } from "@/lib/i18n";
 import { fetchNotifications, type AppNotification } from "@/lib/notifications-api";
@@ -102,6 +103,8 @@ function DashboardPage() {
   // Avatar lightbox + menu
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const { refresh } = useAuth();
 
@@ -110,9 +113,15 @@ function DashboardPage() {
     onSuccess: async () => {
       await refresh();
       setShowAvatarModal(false);
+      setCropFile(null);
+      setAvatarError(null);
       toast.success("Profile photo updated");
     },
-    onError: () => toast.error("Failed to upload image"),
+    onError: (err) => {
+      const msg = err instanceof ApiError || err instanceof Error ? err.message : "Couldn't update your photo.";
+      setAvatarError(msg);
+      toast.error(msg);
+    },
   });
 
   const removeMut = useMutation({
@@ -122,7 +131,11 @@ function DashboardPage() {
       setShowAvatarModal(false);
       toast.success("Profile photo removed");
     },
-    onError: () => toast.error("Failed to remove photo"),
+    onError: (err) => {
+      const msg = err instanceof ApiError || err instanceof Error ? err.message : "Couldn't remove your photo.";
+      setAvatarError(msg);
+      toast.error(msg);
+    },
   });
 
   useEffect(() => {
@@ -188,8 +201,16 @@ function DashboardPage() {
   // Avatar modal handlers
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
+    e.target.value = "";
     if (!f) return;
-    uploadMut.mutate(f);
+    const validationError = validateAvatarFile(f);
+    if (validationError) {
+      setAvatarError(validationError);
+      toast.error(validationError);
+      return;
+    }
+    setAvatarError(null);
+    setCropFile(f);
   };
 
   const onRemove = () => {
@@ -273,50 +294,50 @@ function DashboardPage() {
         </div>
       )}
 
-      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8 max-md:pb-24">
+      <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1400px] px-4 py-6 md:px-8 md:py-8">
         {/* ── Dashboard hero — decorative panel + avatar/greeting/actions/quote, stat strip beneath ── */}
-        {/* MOBILE PHOTO HERO — fixed height so large text doesn't wrap under avatar */}
+        {/* MOBILE PHOTO HERO */}
         <section className="overflow-hidden rounded-3xl border border-border bg-[#fdfaf2] md:hidden">
-          <div className="relative min-h-[128px]">
+          <div className="relative h-36">
             {/* Designed gradient panel — no external photo, so it always renders consistently */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,#e8c98a_0%,transparent_45%),radial-gradient(circle_at_80%_70%,#9cb89a_0%,transparent_50%),linear-gradient(160deg,#f3e6c8_0%,#e9dcc0_100%)]" />
             <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle at 1px 1px, rgba(74,63,42,0.12) 1px, transparent 0)`, backgroundSize: '14px 14px' }} />
-            <div className="relative flex min-h-[128px] items-end gap-2.5 p-3.5">
+            <div className="relative flex h-full items-end gap-3 p-4">
               <Avatar
                 url={user?.avatarUrl}
                 name={user?.displayName || user?.username}
-                size={52}
-                className="shrink-0 rounded-full ring-[3px] ring-[#fdfaf2] shadow-md max-[360px]:!h-11 max-[360px]:!w-11"
+                size={56}
+                className="shrink-0 rounded-full ring-[3px] ring-[#fdfaf2] shadow-md"
                 onClick={() => setShowAvatarModal(true)}
               />
               <div className="min-w-0 flex-1 pb-0.5">
-                <p className="truncate text-[11px] font-semibold leading-none text-foreground/65">Good to see you again <span>👋</span></p>
-                <div className="mt-1 flex items-center gap-1.5">
-                  <h1 className="truncate text-[17px] font-black leading-none tracking-tight text-foreground max-[360px]:text-[15px]">{user?.displayName || firstName}</h1>
+                <p className="flex items-center gap-1 text-xs font-semibold text-foreground/65">Good to see you again <span>👋</span></p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <h1 className="truncate text-[18px] font-black tracking-tight text-foreground">{user?.displayName || firstName}</h1>
                   {user?.role === "admin" && (
                     <span className="shrink-0 rounded-full bg-violet-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">Admin</span>
                   )}
                 </div>
-                <p className="mt-1 truncate text-[11px] font-medium leading-none text-foreground/55">@{user?.username}</p>
+                <p className="mt-0.5 truncate text-xs font-medium text-foreground/55">@{user?.username}</p>
               </div>
             </div>
           </div>
 
-          {/* Stat strip on warm cream band — no truncation on 360px */}
-          <div className="flex divide-x divide-[#e9ddc3] border-t border-[#e9ddc3] bg-[#fdfaf2] px-1.5 py-2.5">
+          {/* Stat strip on warm cream band */}
+          <div className="flex divide-x divide-[#e9ddc3] border-t border-[#e9ddc3] bg-[#fdfaf2] px-2 py-3">
             {typeof user?.reliability === "number" && (
-              <div className="flex flex-1 min-w-0 items-center justify-center gap-1 px-1">
-                <TrendingUp className="h-3 w-3 shrink-0 text-emerald-600" />
-                <span className="truncate text-[11px] font-bold leading-none text-foreground">{user.reliability}% <span className="hidden font-medium text-foreground/50 sm:inline">reliable</span></span>
+              <div className="flex flex-1 items-center justify-center gap-1.5 px-1">
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                <span className="text-xs font-bold text-foreground">{user.reliability}% <span className="font-medium text-foreground/50">reliable</span></span>
               </div>
             )}
-            <div className="flex flex-1 min-w-0 items-center justify-center gap-1 px-1">
-              <Star className="h-3 w-3 shrink-0 fill-[#c9a04e] text-[#c9a04e]" />
-              <span className="whitespace-nowrap text-[11px] font-bold leading-none text-foreground">{Number(user?.rating ?? 0).toFixed(1)} <span className="font-medium text-foreground/50">({user?.ratingCount ?? 0})</span></span>
+            <div className="flex flex-1 items-center justify-center gap-1.5 px-1">
+              <Star className="h-3.5 w-3.5 fill-[#c9a04e] text-[#c9a04e]" />
+              <span className="text-xs font-bold text-foreground">{Number(user?.rating ?? 0).toFixed(1)} <span className="font-medium text-foreground/50">({user?.ratingCount ?? 0})</span></span>
             </div>
-            <div className="flex flex-1 min-w-0 items-center justify-center gap-1 px-1">
-              <MapPin className="h-3 w-3 shrink-0 text-foreground/50" />
-              <span className="truncate text-[11px] font-bold leading-none text-foreground/80">{user?.location?.trim() || "No location"}</span>
+            <div className="flex flex-1 items-center justify-center gap-1.5 px-1">
+              <MapPin className="h-3.5 w-3.5 text-foreground/50" />
+              <span className="truncate text-xs font-bold text-foreground/80">{user?.location?.trim() || "No location"}</span>
             </div>
           </div>
 
@@ -419,66 +440,75 @@ function DashboardPage() {
           </div>
         </section>
 
-        {/* Avatar lightbox modal — fixed: Close (X) and menu never overlap */}
+        {/* Avatar lightbox modal */}
         {showAvatarModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={() => setShowAvatarModal(false)}>
-            <div className="flex w-full max-w-2xl max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              {/* Header: Close and More are side-by-side with gap, so no overlap */}
-              <div className="flex shrink-0 items-center justify-between border-b border-border bg-white px-4 py-3">
-                <h3 className="text-sm font-bold tracking-tight">Profile photo</h3>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <button
-                      className="grid h-9 w-9 place-items-center rounded-full border border-border bg-white shadow-sm hover:bg-muted"
-                      onClick={() => setMenuOpen((s) => !s)}
-                      aria-label="Photo menu"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
-                    {menuOpen && (
-                      <div className="absolute right-0 z-10 mt-2 w-44 rounded-xl border border-border bg-white p-1.5 shadow-xl">
-                        <button
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-muted"
-                          onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}
-                        >
-                          <Camera className="h-4 w-4" /> Change photo
-                        </button>
-                        <button
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
-                          onClick={() => { setMenuOpen(false); onRemove(); }}
-                        >
-                          <Trash2 className="h-4 w-4" /> Remove photo
-                        </button>
-                      </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAvatarModal(false)}>
+            <div className="max-h-[90vh] w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
+              <div className="relative rounded-2xl bg-background p-4">
+                <button aria-label="Close" onClick={() => setShowAvatarModal(false)} className="absolute right-3 top-3 h-9 w-9 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted">
+                  <X className="h-4 w-4" />
+                </button>
+
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    {user?.avatarUrl ? (
+                      <img src={user.avatarUrl} alt="Profile" className="w-full max-h-[70vh] object-contain rounded-md" />
+                    ) : (
+                      <div className="grid h-64 place-items-center rounded-md bg-muted text-4xl font-black text-foreground">{(user?.displayName || user?.username || "?").slice(0,2).toUpperCase()}</div>
                     )}
                   </div>
-                  <button
-                    aria-label="Close"
-                    onClick={() => setShowAvatarModal(false)}
-                    className="grid h-9 w-9 place-items-center rounded-full border border-border bg-white shadow-sm hover:bg-muted"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
 
-              <div className="flex flex-1 flex-col gap-4 overflow-auto p-4 sm:flex-row sm:items-start">
-                <div className="min-w-0 flex-1">
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Profile" className="max-h-[60vh] w-full rounded-xl bg-muted object-contain sm:max-h-[65vh]" />
-                  ) : (
-                    <div className="grid h-64 place-items-center rounded-xl bg-muted text-4xl font-black text-foreground sm:h-[360px]">{(user?.displayName || user?.username || "?").slice(0,2).toUpperCase()}</div>
-                  )}
-                </div>
+                  <div className="w-44 shrink-0">
+                    <div className="flex items-center justify-end">
+                      <div className="relative">
+                        <button
+                          className="h-9 w-9 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted"
+                          onClick={() => setMenuOpen((s) => !s)}
+                          aria-label="Photo menu"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
 
-                <div className="flex w-full shrink-0 flex-col gap-2 sm:w-44">
-                  <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-                  <button onClick={() => fileRef.current?.click()} className="rounded-xl border border-border bg-white px-3 py-3 text-sm font-semibold shadow-sm hover:bg-muted">Upload new</button>
-                  <button onClick={() => setShowAvatarModal(false)} className="rounded-xl bg-foreground px-3 py-3 text-sm font-semibold text-white hover:opacity-90">Close</button>
+                        {menuOpen && (
+                          <div className="absolute right-0 mt-2 w-40 rounded-md border border-border bg-background p-2 shadow">
+                            <button
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
+                              onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}
+                            >
+                              <Camera className="h-4 w-4" /> Change photo
+                            </button>
+                            <button
+                              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-red-600 hover:bg-red-50"
+                              onClick={() => { setMenuOpen(false); onRemove(); }}
+                            >
+                              <Trash2 className="h-4 w-4" /> Remove photo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col gap-2">
+                      <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
+                      <button onClick={() => fileRef.current?.click()} className="rounded-md border border-border px-3 py-2 text-sm">Upload new</button>
+                      <button onClick={() => setShowAvatarModal(false)} className="rounded-md px-3 py-2 text-sm">Close</button>
+                      {avatarError && <p className="text-sm text-destructive">{avatarError}</p>}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {cropFile && (
+          <AvatarCropper
+            file={cropFile}
+            onCancel={() => setCropFile(null)}
+            onDone={async (cropped) => {
+              await uploadMut.mutateAsync(cropped);
+            }}
+          />
         )}
 
         {!apiEnabled && (
@@ -508,8 +538,8 @@ function DashboardPage() {
         {/* ── Main grid — premium mobile ———————————————————————————— */}
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] max-md:mt-6 max-md:gap-5">
           <div className="min-w-0">
-            {/* Tabs — mobile: keeps inner padding so first pill never cut */}
-            <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card p-1.5 shadow-sm snap-x snap-mandatory scrollbar-none scroll-px-4 max-md:-mx-4 max-md:scroll-px-4 max-md:rounded-none max-md:border-x-0 max-md:bg-background/80 max-md:backdrop-blur max-md:px-4 max-md:py-2 max-md:gap-2 max-md:shadow-none max-md:border-b">
+            {/* Tabs — mobile: premium pill bar with snap, desktop unchanged */}
+            <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-border bg-card p-1.5 shadow-sm snap-x snap-mandatory scrollbar-none max-md:-mx-4 max-md:rounded-none max-md:border-x-0 max-md:bg-background/80 max-md:backdrop-blur max-md:px-4 max-md:py-2 max-md:gap-2 max-md:shadow-none max-md:border-b">
               {TABS.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
