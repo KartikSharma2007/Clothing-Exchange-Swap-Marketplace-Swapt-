@@ -248,8 +248,8 @@ function BrowsePage() {
             </p>
           </div>
 
-          {/* Location + save actions — mobile premium */}
-          <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-3 shadow-sm sm:px-4 max-md:rounded-3xl max-md:px-4 max-md:py-4 max-md:gap-3 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
+          {/* Location + save actions — mobile tighter, no double inset waste */}
+          <div className="mt-5 flex flex-wrap items-center gap-2.5 rounded-2xl border border-border bg-card px-3 py-3 shadow-sm sm:px-4 max-md:rounded-2xl max-md:px-3 max-md:py-3 max-md:gap-2.5 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
             <button
               onClick={nearMe}
               disabled={geoBusy}
@@ -488,12 +488,15 @@ function BrowsePage() {
             </div>
           </aside>
 
-          {/* Mobile filter drawer — bottom sheet, 44px chips */}
+          {/* Mobile filter drawer — bottom sheet, drag handle, 44px chips */}
           {showFilters && (
             <div className="fixed inset-0 z-50 md:hidden">
               <div className="absolute inset-0 bg-foreground/40 backdrop-blur-sm" onClick={() => setShowFilters(false)} />
-              <div className="absolute inset-x-0 bottom-0 max-h-[82dvh] overflow-hidden rounded-t-[1.5rem] border border-border bg-background shadow-2xl flex flex-col">
-                <div className="flex items-center justify-between border-b border-border px-4 py-4">
+              <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-hidden rounded-t-[1.75rem] border border-border bg-background shadow-2xl flex flex-col">
+                <div className="flex justify-center pt-3">
+                  <span className="h-1.5 w-10 rounded-full bg-foreground/15" aria-hidden />
+                </div>
+                <div className="flex items-center justify-between border-b border-border px-4 py-3">
                   <h2 className="flex items-center gap-2 text-base font-black"><SlidersHorizontal className="h-4 w-4 text-brand" /> Filters {activeCount>0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">{activeCount}</span>}</h2>
                   <button onClick={() => setShowFilters(false)} className="grid h-11 w-11 place-items-center rounded-full hover:bg-muted"><X className="h-5 w-5" /></button>
                 </div>
@@ -542,7 +545,7 @@ function BrowsePage() {
                     </div>
                   </FilterGroup>
                 </div>
-                <div className="border-t border-border bg-card p-4 flex gap-3 pb-[max(16px,env(safe-area-inset-bottom))]">
+                <div className="border-t border-border bg-card p-4 pt-3 flex gap-3 pb-[max(12px,env(safe-area-inset-bottom))]">
                   <button onClick={() => { clearAll(); setShowFilters(false); }} className="flex-1 rounded-full border border-border py-3 text-sm font-bold min-h-11">Clear all</button>
                   <button onClick={() => setShowFilters(false)} className="flex-[1.5] rounded-full bg-foreground py-3 text-sm font-bold text-background min-h-11">{total} {total===1?"item":"items"} · Show</button>
                 </div>
@@ -552,9 +555,9 @@ function BrowsePage() {
 
           {/* Grid + sort */}
           <div>
-            {/* Active chips — mobile: horizontal scroll with fade, desktop wrap */}
+            {/* Active chips — mobile: horizontal scroll, thin fade hint — last chip stays visible */}
             {(cat || size || condition || g || brand || tag || meetupOnly || lat !== undefined) && (
-              <div className="relative mb-3 flex flex-wrap gap-2.5 md:hidden max-md:flex-nowrap max-md:overflow-x-auto max-md:scrollbar-none max-md:snap-x max-md:snap-mandatory max-md:-mx-4 max-md:px-4 max-md:pb-1 max-md:gap-2 after:hidden max-md:after:block after:absolute after:right-0 after:top-0 after:bottom-1 after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent after:pointer-events-none">
+              <div className="relative mb-3 flex flex-wrap gap-2.5 md:hidden max-md:flex-nowrap max-md:overflow-x-auto max-md:scrollbar-none max-md:snap-x max-md:-mx-4 max-md:px-4 max-md:pb-1 max-md:gap-2 max-md:scroll-ps-4 max-md:scroll-pe-6 after:hidden max-md:after:block after:absolute after:right-0 after:top-0 after:bottom-1 after:w-6 after:bg-gradient-to-l after:from-background after:to-transparent after:pointer-events-none">
                 {cat && <ActiveChip label={cat} onRemove={() => setSearch({ cat: "" })} />}
                 {size && <ActiveChip label={`Size ${size}`} onRemove={() => setSearch({ size: "" })} />}
                 {condition && <ActiveChip label={condition} onRemove={() => setSearch({ condition: "" })} />}
@@ -635,7 +638,7 @@ function BrowsePage() {
                         </div>
                       )}
                       <SaveButton
-                        className="absolute right-2 top-2 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                        className="absolute right-2 top-2 h-9 w-9 opacity-100 max-md:right-1.5 max-md:top-1.5 max-md:h-8 max-md:w-8 md:opacity-0 transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
                         item={{
                           listingId: l.id,
                           title: l.title,
@@ -653,11 +656,11 @@ function BrowsePage() {
                         aria-label={compareItems.some((x) => x.id === l.id) ? `Remove ${l.title} from compare` : `Add ${l.title} to compare`}
                         title="Add to compare"
                         className={cn(
-                          "absolute right-2 top-12 grid h-11 w-11 place-items-center rounded-full shadow ring-1 ring-black/5 transition-colors",
+                          "absolute right-2 top-12 grid h-11 w-11 place-items-center rounded-full shadow ring-1 ring-black/5 transition-colors max-md:right-1.5 max-md:top-10 max-md:h-9 max-md:w-9",
                           compareItems.some((x) => x.id === l.id) ? "bg-brand text-brand-foreground" : "bg-background/90 text-foreground/70 hover:text-brand",
                         )}
                       >
-                        <Scale className="h-4 w-4" />
+                        <Scale className="h-4 w-4 max-md:h-3.5 max-md:w-3.5" />
                       </button>
                       {l.likelyFit && (
                         <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2.5 py-2 text-sm min-h-9 font-bold uppercase tracking-wide text-white backdrop-blur">

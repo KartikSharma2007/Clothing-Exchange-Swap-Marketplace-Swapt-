@@ -225,16 +225,16 @@ function SignupPage() {
                 type={showPw ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Create a password"
-                className={cn(fieldInput, "pr-9")}
+                className={cn(fieldInput, "pr-12")}
                 {...register("password")}
               />
               <button
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+                className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </FormField>
 

@@ -31,7 +31,7 @@ export function ListingCard({ listing: l, matchLabel }: Props) {
           </div>
         )}
         <SaveButton
-          className="absolute right-2 top-2 opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100"
+          className="absolute right-2 top-2 h-9 w-9 opacity-100 max-md:right-1.5 max-md:top-1.5 max-md:h-8 max-md:w-8 md:opacity-0 transition-opacity md:group-hover:opacity-100 md:focus-visible:opacity-100 after:absolute after:-inset-2 after:content-['']"
           item={{
             listingId: l.id,
             title: l.title,

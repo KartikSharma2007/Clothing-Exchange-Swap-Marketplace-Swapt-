@@ -652,12 +652,12 @@ function SellerProfilePage() {
           <div className="px-6 pb-6 sm:px-8 max-md:px-4 max-md:pb-5">
             <div className="-mt-14 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between max-md:-mt-10 max-md:gap-4">
               <div className="flex items-end gap-4 max-md:gap-3 max-md:items-center">
-                <div className="relative shrink-0 rounded-full bg-card p-1 shadow-sm ring-1 ring-border max-md:p-0.5">
+                <div className="relative shrink-0 rounded-full bg-card p-1 shadow-sm ring-1 ring-border max-md:p-1">
                   <Avatar
                     url={user.avatarUrl}
                     name={user.displayName}
                     size={120}
-                    className="ring-2 ring-background max-md:scale-[0.75] max-md:origin-center"
+                    className="ring-2 ring-background max-md:!h-[88px] max-md:!w-[88px]"
                     onClick={() => setAvatarPreviewOpen(true)}
                   />
                   {user.phoneVerified && (

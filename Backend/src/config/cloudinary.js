@@ -11,10 +11,33 @@ cloudinary.config({
 const PRIVATE = String(process.env.CLOUDINARY_PRIVATE_ASSETS ?? "true") === "true";
 const FOLDER = process.env.CLOUDINARY_FOLDER || "swapt/listings";
 const TTL = Number(process.env.CLOUDINARY_SIGNED_URL_TTL || 3600);
-// Public origin of this API — used to build the stable media-proxy URLs.
-// Defaults to localhost so dev works out of the box; set it to the deployed
-// API host in production (it must match the origin the client uses).
-const API_ORIGIN = process.env.API_ORIGIN || `http://localhost:${process.env.PORT || 4000}`;
+// Public origin of this API — used to build the stable media-proxy URLs that
+// get embedded in API responses (e.g. `images: [...]` on a listing).
+//
+// Resolution order:
+//   1. API_ORIGIN            — explicit override, set this in production.
+//   2. RENDER_EXTERNAL_URL   — Render sets this automatically on every web
+//                              service, so deployments work even if API_ORIGIN
+//                              was never configured manually.
+//   3. http://localhost:PORT — local development fallback only.
+//
+// IMPORTANT: if this ever resolves to a localhost URL in production, every
+// image URL served to clients will be unreachable for anyone except someone
+// running a backend on their own machine at that exact port — that is the
+// exact bug this fallback chain exists to prevent.
+const API_ORIGIN = process.env.API_ORIGIN || process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 4000}`;
+
+if (process.env.NODE_ENV === "production" && /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(API_ORIGIN)) {
+  // Fail loud in the logs instead of silently shipping broken image URLs.
+  // eslint-disable-next-line no-console
+  console.error(
+    "[cloudinary] WARNING: API_ORIGIN is not set and RENDER_EXTERNAL_URL was not found, " +
+      `so image URLs are falling back to "${API_ORIGIN}". These URLs will be unreachable ` +
+      "for anyone except a developer running a local backend on this exact port. " +
+      "Set API_ORIGIN to this service's public URL (e.g. https://your-app.onrender.com) " +
+      "in your Render environment variables.",
+  );
+}
 
 /** Upload a Multer memory-storage buffer to Cloudinary. */
 export function uploadBuffer(buffer, { folder = FOLDER, filename } = {}) {

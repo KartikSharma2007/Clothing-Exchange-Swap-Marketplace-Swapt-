@@ -38,11 +38,14 @@ function NotificationsPage() {
           )}
         </div>
 
-        <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory max-md:-mx-4 max-md:px-4 max-md:scroll-ps-4 max-md:gap-2.5">
-          <Filter className="h-4 w-4 text-foreground/40 shrink-0" />
-          {["all", "like", "swap_request", "swap_accepted", "message", "search_alert", "welcome"].map((k) => (
-            <button key={k} onClick={() => setFilter(k as any)} className={`shrink-0 rounded-full px-3 py-2.5 text-sm min-h-11 font-bold border ${filter === k ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>{k === "all" ? "All" : k.replace("_", " ")}</button>
-          ))}
+        <div className="relative">
+          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x max-md:-mx-4 max-md:px-4 max-md:scroll-ps-4 max-md:gap-2.5 max-md:scroll-pe-6">
+            <Filter className="h-4 w-4 text-foreground/40 shrink-0" />
+            {["all", "like", "swap_request", "swap_accepted", "message", "search_alert", "welcome"].map((k) => (
+              <button key={k} onClick={() => setFilter(k as any)} className={`shrink-0 rounded-full px-3 py-2.5 text-sm min-h-11 font-bold border snap-start ${filter === k ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>{k === "all" ? "All" : k.replace("_", " ")}</button>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute right-0 top-0 hidden h-full w-6 bg-gradient-to-l from-background to-transparent max-md:block" aria-hidden />
         </div>
 
         <div className="mt-4 rounded-3xl border border-border bg-card overflow-hidden max-md:rounded-3xl max-md:mx-0">

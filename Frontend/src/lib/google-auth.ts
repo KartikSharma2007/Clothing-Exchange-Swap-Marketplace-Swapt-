@@ -101,16 +101,31 @@ export async function renderGoogleButton(
   options: { theme?: "outline" | "filled_black"; width?: number; text?: "signin_with" | "signup_with" } = {},
 ): Promise<void> {
   const api = await loadGoogleIdentity();
+  // Cancel any pending One Tap prompt and disable auto-select so the button
+  // never shows a pre-filled "Sign in as ..." account chip. Setting
+  // use_fedcm_for_prompt to false prevents Chrome's FedCM personalization
+  // that renders the email/avatar inside the button container.
+  try {
+    api.cancel();
+  } catch {
+    /* ignore if no prompt was shown */
+  }
   api.initialize({
     client_id: GOOGLE_CLIENT_ID,
     ux_mode: "popup",
+    auto_select: false,
     cancel_on_tap_outside: true,
+    use_fedcm_for_prompt: false,
     callback: (response) => {
       if (response.credential) onCredential(response.credential);
       else onError(new GoogleAuthError(response.error || "Google sign-in was cancelled."));
     },
   });
   container.replaceChildren();
+  // Use the container's actual width so the Google iframe fills the card
+  // without leaving awkward side gutters (320 was too narrow for 400px cards).
+  const measuredWidth = options.width ?? Math.floor(container.clientWidth || 320);
+  const width = Math.max(200, Math.min(400, measuredWidth));
   api.renderButton(container, {
     type: "standard",
     theme: options.theme ?? "outline",
@@ -118,7 +133,7 @@ export async function renderGoogleButton(
     shape: "pill",
     text: options.text ?? "continue_with",
     logo_alignment: "center",
-    width: options.width ?? 320,
+    width,
   });
 }
 

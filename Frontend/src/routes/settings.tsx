@@ -88,23 +88,23 @@ function SettingsPage() {
         <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl max-md:text-[26px] max-md:leading-none">Settings</h1>
         <p className="mt-1 text-sm text-foreground/60 max-md:text-[13px]">Manage your account, appearance and privacy.</p>
 
-        {/* Mobile hamburger — three-line button, hidden on PC */}
+        {/* Mobile hamburger — compact, not dominant */}
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open settings menu"
           aria-expanded={mobileOpen}
-          className="mt-5 inline-flex w-full items-center justify-between rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-[0.98] lg:hidden"
+          className="mt-4 inline-flex w-full items-center justify-between rounded-xl border border-border bg-card px-3.5 py-3 text-sm font-bold shadow-sm transition-all hover:bg-muted active:scale-[0.98] lg:hidden"
         >
-          <span className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-foreground text-background">
-              <Menu className="h-4 w-4" />
+          <span className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-foreground text-background">
+              <Menu className="h-3.5 w-3.5" />
             </span>
             <span className="flex flex-col items-start leading-none">
-              <span className="text-xs font-bold uppercase tracking-widest text-foreground/50">Section</span>
-              <span className="text-sm font-black">{TABS.find((t) => t.id === tab)?.label}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-foreground/50">Section</span>
+              <span className="text-[13px] font-black">{TABS.find((t) => t.id === tab)?.label}</span>
             </span>
           </span>
-          <span className="flex items-center gap-1 rounded-full bg-brand/10 px-3 py-1 text-xs font-black text-brand">
+          <span className="flex items-center gap-1 rounded-full bg-brand/10 px-2.5 py-1 text-xs font-black text-brand">
             Menu <span className="text-[10px]">☰</span>
           </span>
         </button>
@@ -1068,25 +1068,25 @@ function SecurityTab() {
         <form onSubmit={submit} className="max-w-md space-y-4">
           <Labeled label="Current password">
             <div className="relative">
-              <input type={showCurrent ? "text" : "password"} className={`${input} pr-10`} value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} placeholder="Enter current password" autoComplete="current-password" />
-              <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showCurrent ? "Hide password" : "Show password"}>
-                {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <input type={showCurrent ? "text" : "password"} className={`${input} pr-12`} value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} placeholder="Enter current password" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowCurrent((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showCurrent ? "Hide password" : "Show password"}>
+                {showCurrent ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </Labeled>
           <Labeled label="New password" hint="8+ characters, one uppercase letter and one number.">
             <div className="relative">
-              <input type={showNext ? "text" : "password"} className={`${input} pr-10`} value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="Enter new password" autoComplete="new-password" />
-              <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showNext ? "Hide password" : "Show password"}>
-                {showNext ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <input type={showNext ? "text" : "password"} className={`${input} pr-12`} value={form.next} onChange={(e) => setForm({ ...form, next: e.target.value })} placeholder="Enter new password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowNext((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showNext ? "Hide password" : "Show password"}>
+                {showNext ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </Labeled>
           <Labeled label="Confirm new password">
             <div className="relative">
-              <input type={showConfirm ? "text" : "password"} className={`${input} pr-10`} value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} placeholder="Confirm new password" autoComplete="new-password" />
-              <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showConfirm ? "Hide password" : "Show password"}>
-                {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <input type={showConfirm ? "text" : "password"} className={`${input} pr-12`} value={form.confirm} onChange={(e) => setForm({ ...form, confirm: e.target.value })} placeholder="Confirm new password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowConfirm((v) => !v)} className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground" aria-label={showConfirm ? "Hide password" : "Show password"}>
+                {showConfirm ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </Labeled>
@@ -1433,17 +1433,17 @@ function DangerTab() {
             <div className="relative">
               <input
                 type={showPw ? "text" : "password"}
-                className={input}
+                className={`${input} pr-12`}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPw((s) => !s)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-foreground/50 transition-colors hover:text-foreground"
+                className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
                 aria-label={showPw ? "Hide password" : "Show password"}
               >
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
           </Labeled>

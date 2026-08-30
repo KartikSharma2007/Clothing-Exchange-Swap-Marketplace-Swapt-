@@ -111,23 +111,19 @@ export function GoogleAuthButton({ intent = "signin_with", onAuthenticated }: Pr
 
   return (
     <div className="space-y-3">
-      {/* Premium Google button wrapper — best for mobile & PC with PC animation */}
-      <div className="group relative overflow-hidden rounded-2xl border border-border bg-white p-1.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/5 hover:border-foreground/15 active:translate-y-0 max-md:rounded-2xl max-md:p-2 max-md:shadow-[0_4px_16px_rgba(0,0,0,0.06)] max-md:border-border/60">
-        {/* PC shimmer highlight */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 hidden md:block" />
-        <div className="flex min-h-[44px] w-full items-center justify-center max-md:min-h-[52px]">
+      {/* Clean Google button — no double border, pill matches Google's own shape */}
+      <div className="group relative overflow-hidden rounded-full border border-[#dadce0] bg-white shadow-sm transition-all duration-300 hover:shadow-md hover:border-[#c2c4c7] hover:-translate-y-0.5 active:translate-y-0">
+        <div className="flex min-h-[44px] w-full items-center justify-center px-1 py-1 max-md:min-h-[48px]">
           {status === "loading" && (
-            <div className="h-11 w-full animate-pulse rounded-full bg-muted max-md:h-12" aria-label="Loading Google sign-in" />
+            <div className="h-10 w-full animate-pulse rounded-full bg-muted" aria-label="Loading Google sign-in" />
           )}
           {status === "exchanging" && (
             <span className="inline-flex items-center gap-2 rounded-full bg-brand/10 px-4 py-2 text-sm font-bold text-brand">
               <Loader2 className="h-4 w-4 animate-spin" /> Signing you in…
             </span>
           )}
-          <div ref={slotRef} className={status === "idle" ? "flex w-full justify-center [&>div]:!w-full [&>div]:flex [&>div]:justify-center [&>div>div]:!w-full [&>div>div>div]:!w-full" : "hidden"} />
+          <div ref={slotRef} className={status === "idle" ? "flex w-full justify-center [&>div]:!w-full [&>div]:flex [&>div]:justify-center [&_iframe]:!m-0" : "hidden"} />
         </div>
-        {/* PC subtle glow on hover */}
-        <div className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-r from-brand/0 via-brand/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 hidden md:block" />
       </div>
       <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-foreground/40 max-md:text-[11px]">
         <ShieldCheck className="h-3 w-3 text-emerald-500" /> Secure Google sign-in • No password needed
@@ -229,7 +225,7 @@ function LinkAccountDialog({
             <input
               type={showPw ? "text" : "password"}
               autoComplete="current-password"
-              className={cn(fieldInput, "pr-9")}
+              className={cn(fieldInput, "pr-12")}
               placeholder="Your Swapt password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -237,10 +233,10 @@ function LinkAccountDialog({
             <button
               type="button"
               onClick={() => setShowPw((s) => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
               aria-label={showPw ? "Hide password" : "Show password"}
             >
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </FormField>
 
@@ -363,7 +359,7 @@ function CompleteProfileDialog({
             <input
               type={showPw ? "text" : "password"}
               autoComplete="new-password"
-              className={cn(fieldInput, "pr-9")}
+              className={cn(fieldInput, "pr-12")}
               placeholder="Choose a password (8+ characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -371,10 +367,10 @@ function CompleteProfileDialog({
             <button
               type="button"
               onClick={() => setShowPw((s) => !s)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
               aria-label={showPw ? "Hide password" : "Show password"}
             >
-              {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
           </FormField>
 

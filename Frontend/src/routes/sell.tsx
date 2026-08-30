@@ -496,7 +496,7 @@ function SellPage() {
   return (
     <div className="min-h-dvh bg-background">
       <Navbar />
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 pb-32 pt-6 md:px-8 md:pt-10 lg:pb-20 max-md:px-4 max-md:pt-5 max-md:pb-36 max-md:scroll-pb-36">
+      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl px-4 pb-32 pt-6 md:px-8 md:pt-10 lg:pb-20 max-md:px-4 max-md:pt-5 max-md:pb-28 max-md:scroll-pb-28">
         {/* Hero — mobile compact */}
         <div className="relative overflow-hidden rounded-3xl border border-border bg-card px-5 py-7 shadow-sm md:px-8 md:py-9 max-md:rounded-2xl max-md:px-4 max-md:py-6">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_100%_0%,rgba(224,53,58,0.10),transparent_60%),radial-gradient(45%_50%_at_0%_100%,rgba(224,53,58,0.06),transparent_60%)]" />
@@ -611,38 +611,38 @@ function SellPage() {
 
                   {previews.length > 0 && (
                   <div className="mt-4 space-y-4 max-md:space-y-3">
-                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 max-md:gap-2.5 max-md:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 max-md:gap-2 max-md:grid-cols-3">
                       {previews.map((src, i) => (
-                        <div key={src} className="relative aspect-square overflow-hidden rounded-2xl border border-border touch-manipulation">
+                        <div key={src} className="relative aspect-square overflow-hidden rounded-xl border border-border touch-manipulation max-md:rounded-xl">
                           <img src={src} alt={`Upload preview ${i + 1}`} className="h-full w-full object-cover" />
                           <button
                             type="button"
                             aria-label={`Crop photo ${i + 1}`}
                             onClick={() => setCropping({ index: i, src })}
-                            className="absolute bottom-1.5 right-1.5 grid h-10 w-10 place-items-center rounded-full bg-background/90 shadow-md backdrop-blur transition-colors hover:bg-brand hover:text-brand-foreground sm:h-8 sm:w-8 max-md:h-9 max-md:w-9"
+                            className="absolute bottom-1 right-1 grid h-8 w-8 place-items-center rounded-full bg-background/90 shadow-md backdrop-blur transition-colors hover:bg-brand hover:text-brand-foreground sm:h-8 sm:w-8 max-md:h-8 max-md:w-8"
                           >
-                            <Crop className="h-3.5 w-3.5" />
+                            <Crop className="h-3 w-3" />
                           </button>
                           <button
                             type="button"
                             aria-label={`Remove photo ${i + 1}`}
                             onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                            className="absolute right-1.5 top-1.5 grid h-10 w-10 place-items-center rounded-full bg-background/90 shadow-md backdrop-blur transition-colors hover:bg-destructive hover:text-background sm:h-8 sm:w-8 max-md:h-9 max-md:w-9"
+                            className="absolute right-1 top-1 grid h-8 w-8 place-items-center rounded-full bg-background/90 shadow-md backdrop-blur transition-colors hover:bg-destructive hover:text-background sm:h-8 sm:w-8 max-md:h-8 max-md:w-8"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-3 w-3" />
                           </button>
                           {i === 0 && (
-                            <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/70 px-2 py-0.5 text-xs font-bold text-white max-md:px-2 max-md:py-1 max-md:text-[10px]">
+                            <span className="absolute bottom-1 left-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                               Cover
                             </span>
                           )}
-                          {/* Mobile touch reorder — finger friendly */}
+                          {/* Mobile touch reorder — smaller, centered */}
                           <div className="absolute inset-x-1 top-1/2 hidden -translate-y-1/2 justify-between max-md:flex">
-                            <button type="button" aria-label="Move left" onClick={() => setFiles(prev => { if(i===0) return prev; const a=[...prev]; [a[i],a[i-1]]=[a[i-1],a[i]]; return a; })} disabled={i===0} className="grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white backdrop-blur disabled:opacity-30 active:bg-black/80">
-                              <ChevronDown className="h-3 w-3 rotate-90" />
+                            <button type="button" aria-label="Move left" onClick={() => setFiles(prev => { if(i===0) return prev; const a=[...prev]; [a[i],a[i-1]]=[a[i-1],a[i]]; return a; })} disabled={i===0} className="grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white backdrop-blur disabled:opacity-30 active:bg-black/80">
+                              <ChevronDown className="h-2.5 w-2.5 rotate-90" />
                             </button>
-                            <button type="button" aria-label="Move right" onClick={() => setFiles(prev => { if(i===prev.length-1) return prev; const a=[...prev]; [a[i],a[i+1]]=[a[i+1],a[i]]; return a; })} disabled={i===previews.length-1} className="grid h-7 w-7 place-items-center rounded-full bg-black/60 text-white backdrop-blur disabled:opacity-30 active:bg-black/80">
-                              <ChevronDown className="h-3 w-3 -rotate-90" />
+                            <button type="button" aria-label="Move right" onClick={() => setFiles(prev => { if(i===prev.length-1) return prev; const a=[...prev]; [a[i],a[i+1]]=[a[i+1],a[i]]; return a; })} disabled={i===previews.length-1} className="grid h-6 w-6 place-items-center rounded-full bg-black/60 text-white backdrop-blur disabled:opacity-30 active:bg-black/80">
+                              <ChevronDown className="h-2.5 w-2.5 -rotate-90" />
                             </button>
                           </div>
                         </div>

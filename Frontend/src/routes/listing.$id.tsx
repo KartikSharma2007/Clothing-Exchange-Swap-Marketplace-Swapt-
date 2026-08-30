@@ -364,7 +364,7 @@ function ListingDetail() {
                   ))}
                 </div>
               )}
-              {/* Mobile swipe arrows */}
+              {/* Mobile swipe arrows — 44px hit, higher contrast */}
               {listing.images.length > 1 && (
                 <>
                   <button
@@ -372,18 +372,18 @@ function ListingDetail() {
                     onClick={() => setActive((a) => Math.max(0, a - 1))}
                     disabled={active === 0}
                     aria-label="Previous image"
-                    className="absolute left-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur transition active:bg-black/60 disabled:opacity-30 max-md:grid"
+                    className="absolute left-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur transition active:bg-black/80 disabled:opacity-30 max-md:grid"
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeft className="h-5 w-5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setActive((a) => Math.min(listing.images.length - 1, a + 1))}
                     disabled={active === listing.images.length - 1}
                     aria-label="Next image"
-                    className="absolute right-2 top-1/2 hidden h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/40 text-white backdrop-blur transition active:bg-black/60 disabled:opacity-30 max-md:grid"
+                    className="absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white shadow-lg backdrop-blur transition active:bg-black/80 disabled:opacity-30 max-md:grid"
                   >
-                    <ArrowLeft className="h-4 w-4 rotate-180" />
+                    <ArrowLeft className="h-5 w-5 rotate-180" />
                   </button>
                 </>
               )}
@@ -576,16 +576,16 @@ function ListingDetail() {
                     {t("action.requestExchange")} · {n(listing.value)} {t("common.creditsShort")}
                   </button>
                 )}
-                <div className="flex gap-2.5 max-md:gap-2">
-                  <SaveButton item={bagItem} variant="pill" className="flex-1 justify-center max-md:min-h-11" />
+                <div className="flex gap-2.5 max-md:gap-2.5">
+                  <SaveButton item={bagItem} variant="pill" className="flex-1 justify-center max-md:min-h-12 max-md:text-sm max-md:font-bold" />
                   <ShareMenu url={typeof window !== "undefined" ? window.location.href : ""} title={`${listing.title} — ${listing.brand} on Swapt`}>
                     {(openShare) => (
                       <button
                         onClick={openShare}
                         aria-label="Share"
-                        className="inline-flex flex-1 min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:border-foreground hover:bg-muted max-md:min-h-11 max-md:px-3 max-md:py-2.5 max-md:text-xs"
+                        className="inline-flex flex-1 min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:border-foreground hover:bg-muted max-md:min-h-12 max-md:px-4 max-md:py-3 max-md:text-sm max-md:font-bold"
                       >
-                        <Share2 className="h-4 w-4 max-md:h-3.5 max-md:w-3.5" /> Share
+                        <Share2 className="h-4 w-4 max-md:h-4 max-md:w-4" /> Share
                       </button>
                     )}
                   </ShareMenu>

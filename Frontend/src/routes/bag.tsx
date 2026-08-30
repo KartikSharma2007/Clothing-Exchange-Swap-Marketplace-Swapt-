@@ -283,13 +283,13 @@ function BagPage() {
 function CompactBagRow({ item, onRemove }: { item: BagItem; onRemove: () => void }) {
   return (
     <li>
-      <article className="rounded-2xl border border-border bg-card p-2.5 shadow-sm transition-shadow active:shadow-md max-md:rounded-3xl max-md:p-3.5 max-md:shadow-[0_4px_20px_rgba(0,0,0,0.04)] max-md:border-border/60">
-        <div className="flex gap-3 max-md:gap-3.5">
-          {/* Small thumbnail — mobile larger for thumb friendliness */}
+      <article className="rounded-2xl border border-border bg-card p-3 shadow-sm transition-shadow active:shadow-md max-md:rounded-2xl max-md:p-3 max-md:shadow-sm max-md:border-border">
+        <div className="flex gap-3 max-md:gap-3">
+          {/* Thumbnail — consistent size avoids jump at breakpoint */}
           <Link
             to="/listing/$id"
             params={{ id: item.listingId }}
-            className="relative block h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted max-md:h-[84px] max-md:w-[84px] max-md:rounded-2xl"
+            className="relative block h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted"
           >
             {item.image ? (
               <img src={item.image} alt={item.title} loading="lazy" className="h-full w-full object-cover" />

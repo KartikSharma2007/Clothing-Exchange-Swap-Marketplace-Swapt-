@@ -118,21 +118,19 @@ function LoginPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(55%_45%_at_12%_0%,rgba(224,53,58,0.28),transparent_60%),radial-gradient(45%_40%_at_95%_100%,rgba(224,53,58,0.14),transparent_60%),radial-gradient(30%_25%_at_80%_5%,rgba(255,255,255,0.08),transparent_55%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.14] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:44px_44px]" />
 
-      {/* Top bar — mobile premium, perfect alignment */}
-      <header className="relative z-10 flex items-center justify-between gap-3 px-5 py-5 sm:px-8 lg:px-12 max-md:px-4 max-md:py-4 max-md:gap-2">
-        <div className="flex min-w-0 items-center gap-3 max-md:gap-2">
-          <BackHome dark className="shrink-0" />
-          <Link to="/" className="hidden text-2xl font-black tracking-tight text-white sm:block">
-            swapt<span className="text-brand">.</span>
-          </Link>
-        </div>
-        {/* Mobile centered logo — perfect placement */}
-        <Link to="/" className="absolute left-1/2 hidden -translate-x-1/2 text-xl font-black tracking-tight text-white max-md:flex sm:hidden">
+      {/* Top bar — mobile no overlap: flex center instead of absolute */}
+      <header className="relative z-10 flex items-center gap-2 px-5 py-5 sm:px-8 lg:px-12 max-md:px-3 max-md:py-3.5 max-md:gap-2">
+        <BackHome dark className="shrink-0 max-md:shrink-0" />
+        <Link to="/" className="hidden shrink-0 text-2xl font-black tracking-tight text-white sm:block">
+          swapt<span className="text-brand">.</span>
+        </Link>
+        {/* Mobile centered logo — flex-1 centered, truncates instead of overlapping */}
+        <Link to="/" className="flex flex-1 justify-center truncate text-xl font-black tracking-tight text-white sm:hidden max-md:text-[18px]">
           swapt<span className="text-brand">.</span>
         </Link>
         <Link
           to="/signup"
-          className="shrink-0 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/50 hover:text-white max-md:px-3.5 max-md:py-2.5 max-md:text-xs max-md:font-bold max-md:bg-white/10 max-md:backdrop-blur max-md:min-h-11 max-md:inline-flex max-md:items-center"
+          className="shrink-0 rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/50 hover:text-white max-md:px-3 max-md:py-2 max-md:text-xs max-md:font-bold max-md:bg-white/10 max-md:backdrop-blur max-md:min-h-11 max-md:inline-flex max-md:items-center"
         >
           <span className="hidden sm:inline">New here? </span><span className="font-bold text-brand">Sign up</span>
         </Link>
@@ -201,16 +199,16 @@ function LoginPage() {
                     autoComplete="current-password"
                     placeholder="Your password"
                     aria-invalid={!!errors.password}
-                    className={cn(fieldInput, "pr-9")}
+                    className={cn(fieldInput, "pr-12")}
                     {...register("password")}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPw((s) => !s)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-foreground"
+                    className="absolute right-1 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-xl text-foreground/50 transition-colors hover:bg-muted hover:text-foreground max-md:h-11 max-md:w-11"
                     aria-label={showPw ? "Hide password" : "Show password"}
                   >
-                    {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPw ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </FormField>
 
