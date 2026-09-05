@@ -9,7 +9,7 @@ const router = Router();
 // URL-encoded (it may contain "/"), and Express decodes it automatically.
 const imgLimiter = rateLimit({ windowMs: 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false });
 
-router.get("/images/:publicId", imgLimiter, (req, res, next) => {
+router.get("/assets/images/:publicId", imgLimiter, (req, res, next) => {
   try {
     const publicId = String(req.params.publicId || "");
     if (!publicId || !isAllowedAsset(publicId)) {
