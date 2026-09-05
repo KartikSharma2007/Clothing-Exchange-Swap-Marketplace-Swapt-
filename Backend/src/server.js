@@ -22,6 +22,7 @@ import ogRoutes from "./routes/og.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import recommendationsRoutes from "./routes/recommendations.routes.js";
 import devRoutes from "./routes/dev.routes.js";
+import socialRoutes from "./routes/social.routes.js";
 import webpush from "web-push";
 import { errorHandler, notFound } from "./middleware/error.js";
 import { attachWebSocket } from "./ws.js";
@@ -116,14 +117,15 @@ app.use(
 app.get("/api/health", (_req, res) => res.json({ ok: true, uptime: process.uptime() }));
 app.use("/api/auth", authRoutes);
 app.use("/api/listings", listingRoutes);
-app.use("/api", reviewRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/me", meRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/wishlist", wishlistRoutes);
-app.use("/api", contactRoutes);
+app.use("/api/contact", contactRoutes);
 app.use("/api/notifications", notificationsRoutes);
-app.use("/api", assetsRoutes);
+app.use("/api/social", socialRoutes);
+app.use("/api/assets", assetsRoutes);
 app.use("/api/payments", paymentRoutes);
   app.use("/api/recommendations", recommendationsRoutes);
 app.use("/api", devRoutes);
@@ -153,7 +155,11 @@ connectDB(process.env.MONGODB_URI)
     });
     try {
       attachWebSocket(server);
-      server.on("error", () => {}); // ws attaches its own handler; prevent unhandled 'error' on ws
+      // WebSocket server attaches its own error handler, but we still want to listen for
+      // any errors that might occur during the attachment process
+      server.on("error", (err) => {
+        console.error("[ws] WebSocket server error:", err);
+      });
     } catch (e) {
       console.error("[ws] failed to attach:", e.message);
     }

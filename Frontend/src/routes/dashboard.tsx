@@ -25,7 +25,7 @@ import { deleteConversation, startConversation } from "@/lib/swap-api";
 import { fetchSwapMatches, type SwapMatch } from "@/lib/matchmaking-api";
 import { apiEnabled, ApiError } from "@/lib/api";
 import { downloadApiCsv, toCsv } from "@/lib/csv";
-import { relativeTime } from "@/lib/i18n";
+import { localeFromPrefs, relativeTime } from "@/lib/i18n";
 import { fetchNotifications, type AppNotification } from "@/lib/notifications-api";
 import { cn } from "@/lib/utils";
 
@@ -194,7 +194,6 @@ function DashboardPage() {
 
   const goTab = (t: Tab) => {
     setTab(t);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const showListings = (f: ListingFilter) => { setListingFilter(f); goTab("listings"); };
 
@@ -442,58 +441,53 @@ function DashboardPage() {
 
         {/* Avatar lightbox modal */}
         {showAvatarModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowAvatarModal(false)}>
-            <div className="max-h-[90vh] w-full max-w-2xl p-4" onClick={(e) => e.stopPropagation()}>
-              <div className="relative rounded-2xl bg-background p-4">
-                <button aria-label="Close" onClick={() => setShowAvatarModal(false)} className="absolute right-3 top-3 h-9 w-9 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted">
-                  <X className="h-4 w-4" />
-                </button>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={() => setShowAvatarModal(false)}>
+            <div className="max-h-[90vh] w-full max-w-[90%] sm:max-w-[420px] p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
+              <div className="relative rounded-2xl bg-background/50 p-4 sm:p-6 text-center">
+                {/* Avatar image - made more round with fixed size container */}
+                <div className="w-48 h-48 mx-auto mb-4 sm:w-80 sm:h-80 sm:mb-6">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center rounded-full bg-muted/50 text-4xl font-black/50 text-foreground/50 sm:text-5xl">
+                      {(user?.displayName || user?.username || "?").slice(0,2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
 
-                <div className="flex items-start gap-4">
-                  <div className="flex-1">
-                    {user?.avatarUrl ? (
-                      <img src={user.avatarUrl} alt="Profile" className="w-full max-h-[70vh] object-contain rounded-md" />
-                    ) : (
-                      <div className="grid h-64 place-items-center rounded-md bg-muted text-4xl font-black text-foreground">{(user?.displayName || user?.username || "?").slice(0,2).toUpperCase()}</div>
-                    )}
-                  </div>
+                {/* Buttons container */}
+                <div className="flex items-center justify-center space-x-3 sm:space-x-4">
+                  {/* Close button */}
+                  <button aria-label="Close" onClick={() => setShowAvatarModal(false)} className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-transparent bg-transparent flex items-center justify-center hover:bg-muted/50 text-foreground/70">
+                    <X className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" />
+                  </button>
 
-                  <div className="w-44 shrink-0">
-                    <div className="flex items-center justify-end">
-                      <div className="relative">
+                  {/* Three-dot menu button */}
+                  <div className="relative">
+                    <button
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-transparent bg-transparent flex items-center justify-center hover:bg-muted/50 text-foreground/70"
+                      onClick={() => setMenuOpen((s) => !s)}
+                      aria-label="Photo menu"
+                    >
+                      <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" />
+                    </button>
+
+                    {menuOpen && (
+                      <div className="absolute right-0 mt-2 sm:mt-3 w-40 sm:w-48 rounded-md border border-transparent bg-transparent/50 p-2 sm:p-3 z-10">
                         <button
-                          className="h-9 w-9 rounded-full border border-border bg-background flex items-center justify-center hover:bg-muted"
-                          onClick={() => setMenuOpen((s) => !s)}
-                          aria-label="Photo menu"
+                          className="flex w-full items-center gap-2 sm:gap-2.5 rounded-md px-2 sm:px-2.5 py-2 sm:py-2.5 text-sm sm:text-base hover:bg-muted/50"
+                          onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <Camera className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" /> Change photo
                         </button>
-
-                        {menuOpen && (
-                          <div className="absolute right-0 mt-2 w-40 rounded-md border border-border bg-background p-2 shadow">
-                            <button
-                              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm hover:bg-muted"
-                              onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}
-                            >
-                              <Camera className="h-4 w-4" /> Change photo
-                            </button>
-                            <button
-                              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-red-600 hover:bg-red-50"
-                              onClick={() => { setMenuOpen(false); onRemove(); }}
-                            >
-                              <Trash2 className="h-4 w-4" /> Remove photo
-                            </button>
-                          </div>
-                        )}
+                        <button
+                          className="flex w-full items-center gap-2 sm:gap-2.5 rounded-md px-2 sm:px-2.5 py-2 sm:py-2.5 text-sm text-red-600/50 sm:text-base hover:bg-red-50/50"
+                          onClick={() => { setMenuOpen(false); onRemove(); }}
+                        >
+                          <Trash2 className="h-5 w-5" className="text-red-600" /> Remove photo
+                        </button>
                       </div>
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-2">
-                      <input ref={fileRef} type="file" accept="image/*" onChange={onFileChange} className="hidden" />
-                      <button onClick={() => fileRef.current?.click()} className="rounded-md border border-border px-3 py-2 text-sm">Upload new</button>
-                      <button onClick={() => setShowAvatarModal(false)} className="rounded-md px-3 py-2 text-sm">Close</button>
-                      {avatarError && <p className="text-sm text-destructive">{avatarError}</p>}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -725,12 +719,7 @@ function DashboardPage() {
 /* ─────────────────────────── Shared bits ─────────────────────────── */
 
 function timeAgo(iso: string) {
-  let lang = "en-GB";
-  try {
-    const raw = window.localStorage.getItem("swapt.preferences");
-    if (raw) lang = (JSON.parse(raw) as { language?: string }).language ?? lang;
-  } catch { /* ignore */ }
-  return relativeTime(lang, iso);
+  return relativeTime(localeFromPrefs(), iso);
 }
 
 function RatingStars({ rating, className }: { rating: number; className?: string }) {

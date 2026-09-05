@@ -214,6 +214,7 @@ export const savedSearchSchema = z.object({
   g: z.string().trim().max(20).optional().default(""),
   brand: z.string().trim().max(60).optional().default(""),
   tag: z.string().trim().max(20).optional().default(""),
+  material: z.string().trim().max(40).optional().default(""),
   // Optional location scope for the search (matches browse's near-me filter).
   // Accepts null / "" / missing — the browse page stores `radiusKm ?? null` in
   // localStorage, and z.coerce.number() turns null into 0, which then failed
@@ -238,6 +239,7 @@ export const listQuerySchema = z.object({
   g: z.string().trim().max(20).optional().default(""),
   brand: z.string().trim().max(60).optional().default(""),
   tag: z.string().trim().max(20).optional().default(""),
+  material: z.string().trim().max(40).optional().default(""),
   sort: z.enum(["newest", "oldest", "value-asc", "value-desc", "most-saved", "most-viewed", "top-rated", "relevance", "nearest"]).optional().default("newest"),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
   limit: z.coerce.number().int().min(1).max(60).optional().default(24),

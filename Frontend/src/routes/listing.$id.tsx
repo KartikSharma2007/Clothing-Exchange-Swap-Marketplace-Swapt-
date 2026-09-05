@@ -326,26 +326,28 @@ function ListingDetail() {
                 <Maximize2 className="h-3 w-3 max-md:h-3 max-md:w-3" /> Tap to zoom
               </span>
 
-              {/* Condition badge — mobile compact */}
-              <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-3 py-2.5 text-sm min-h-11 font-bold shadow-sm backdrop-blur max-md:left-2 max-md:top-2 max-md:gap-1 max-md:px-2.5 max-md:py-2 max-md:text-xs max-md:min-h-9">
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 max-md:h-3 max-md:w-3" /> {listing.condition}
-              </span>
+              {/* Mobile condition badge */}
+              <div className="absolute left-2 top-2 z-20 md:hidden">
+                <span className="inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-2 text-[11px] font-bold shadow-sm backdrop-blur min-h-8">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-600" /> {listing.condition}
+                </span>
+              </div>
 
-              {/* Gallery actions — mobile compact */}
-              <div className="absolute right-3 top-3 flex gap-2 max-md:right-2 max-md:top-2 max-md:gap-1.5">
+              {/* Desktop gallery actions */}
+              <div className="absolute right-3 top-3 z-10 hidden gap-2 md:flex">
                 <SaveButton
                   item={bagItem}
                   variant="pill"
-                  className="gap-2 rounded-full border-0 bg-background/95 px-4 py-2 text-xs font-bold shadow-lg shadow-black/10 ring-1 ring-border/70 backdrop-blur transition-all duration-200 hover:-translate-y-px hover:ring-border active:scale-95 max-md:px-3 max-md:py-2 max-md:text-xs max-md:min-h-9 max-md:active:scale-95"
+                  className="gap-2 rounded-full border-0 bg-background/95 px-4 py-2 text-xs font-bold shadow-lg shadow-black/10 ring-1 ring-border/70 backdrop-blur transition-all duration-200 hover:-translate-y-px hover:ring-border active:scale-95"
                 />
                 <ShareMenu url={typeof window !== "undefined" ? window.location.href : ""} title={`${listing.title} — ${listing.brand} on Swapt`}>
                   {(openShare) => (
                     <button
                       onClick={openShare}
                       aria-label="Share"
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full border-0 bg-background/95 px-4 py-2.5 text-sm font-bold text-foreground/90 shadow-lg shadow-black/10 ring-1 ring-border/70 backdrop-blur transition-all duration-200 hover:-translate-y-px hover:text-foreground hover:ring-border max-md:min-h-9 max-md:gap-1.5 max-md:px-3 max-md:py-2 max-md:text-xs"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full border-0 bg-background/95 px-4 py-2.5 text-sm font-bold text-foreground/90 shadow-lg shadow-black/10 ring-1 ring-border/70 backdrop-blur transition-all duration-200 hover:-translate-y-px hover:text-foreground hover:ring-border"
                     >
-                      <Share2 className="h-4 w-4 max-md:h-3.5 max-md:w-3.5" /> Share
+                      <Share2 className="h-4 w-4" /> Share
                     </button>
                   )}
                 </ShareMenu>
@@ -576,19 +578,8 @@ function ListingDetail() {
                     {t("action.requestExchange")} · {n(listing.value)} {t("common.creditsShort")}
                   </button>
                 )}
-                <div className="flex gap-2.5 max-md:gap-2.5">
-                  <SaveButton item={bagItem} variant="pill" className="flex-1 justify-center max-md:min-h-12 max-md:text-sm max-md:font-bold" />
-                  <ShareMenu url={typeof window !== "undefined" ? window.location.href : ""} title={`${listing.title} — ${listing.brand} on Swapt`}>
-                    {(openShare) => (
-                      <button
-                        onClick={openShare}
-                        aria-label="Share"
-                        className="inline-flex flex-1 min-h-11 items-center justify-center gap-2 rounded-full border border-border bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:border-foreground hover:bg-muted max-md:min-h-12 max-md:px-4 max-md:py-3 max-md:text-sm max-md:font-bold"
-                      >
-                        <Share2 className="h-4 w-4 max-md:h-4 max-md:w-4" /> Share
-                      </button>
-                    )}
-                  </ShareMenu>
+                <div className="flex max-md:gap-2.5">
+                  <SaveButton item={bagItem} variant="pill" className="w-full justify-center max-md:min-h-12 max-md:text-sm max-md:font-bold" />
                 </div>
               </div>
             </div>

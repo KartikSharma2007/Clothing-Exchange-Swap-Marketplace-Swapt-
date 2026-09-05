@@ -44,7 +44,7 @@ export function Avatar({
         <img
           src={url}
           alt={name || "avatar"}
-          className="h-full w-full object-cover block"
+          className="h-full w-full object-cover object-center block"
           referrerPolicy="no-referrer"
           onError={() => setImgErrored(true)}
         />

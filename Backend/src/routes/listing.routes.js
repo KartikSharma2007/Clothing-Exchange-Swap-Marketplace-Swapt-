@@ -40,6 +40,7 @@ async function notifySavedSearchMatches(listing) {
       if (s.size && listing.size !== s.size) return false;
       if (s.g && listing.gender !== s.g) return false;
       if (s.brand && String(listing.brand).toLowerCase() !== String(s.brand).toLowerCase()) return false;
+      if (s.material && String(listing.material).toLowerCase() !== String(s.material).toLowerCase()) return false;
       if (s.tag === "sports" && !SPORTS_BRANDS.some((b) => String(b).toLowerCase() === String(listing.brand).toLowerCase())) return false;
       if (s.q) {
         const rx = new RegExp(s.q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
@@ -287,6 +288,7 @@ router.get("/", async (req, res, next) => {
     if (tag === "trending") filter.createdAt = { $gte: new Date(Date.now() - 7 * 86400000) };
     if (tag === "sale") filter.value = { $lte: 25 };
     if (meetupOnly) filter.meetup = true;
+    if (material) filter.material = new RegExp(`^${material.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
     if (typeof minValue === "number" || typeof maxValue === "number") {
       // Merge with any existing value constraint (e.g. the "sale" tag filter).
       const v = { ...(filter.value || {}) };
@@ -414,6 +416,204 @@ router.get("/facets", async (_req, res, next) => {
     });
   } catch (err) { next(err); }
 });
+
+/** GET /api/listings/popular — get popular/trending listings for homepage. */
+router.get("/popular", async (_req, res, next) => {
+  try {
+    // Get listings that are active and approved, sorted by popularity factors
+    const popularListings = await Listing.find({
+      status: "active",
+      moderationStatus: "approved",
+    })
+      .sort({ saves: -1, views: -1, createdAt: -1 }) // Sort by saves, then views, then newest
+      .limit(10)
+      .populate("seller", "username displayName rating swaps reliability reliabilitySample avatar")
+      .lean();
+
+    // Serialize the listings for consistent output
+    const serialized = popularListings.map(listing => serialize(listing));
+
+    res.json({ items: serialized });
+  } catch (err) { next(err); }
+});
+
+/** POST /api/listings/search-natural-language — use AI to parse natural language query into search parameters */
+router.post("/search-natural-language", async (req, res, next) => {
+  try {
+    const { query } = req.body;
+
+    if (!query || typeof query !== "string") {
+      return res.status(400).json({ error: "Natural language query is required" });
+    }
+
+    // Use AI to parse the natural language query
+    const parsedQuery = await parseNaturalLanguageSearchQuery(query);
+
+    // Return the parsed search parameters that can be used with the regular search endpoint
+    res.json({
+      originalQuery: query,
+      parsedParameters: parsedQuery,
+      suggestion: "Use these parameters with the GET /api/listings endpoint to search"
+    });
+  } catch (err) { next(err); }
+});
+
+/**
+ * Parse a natural language search query into structured search parameters
+ * Uses AI to understand user intent and convert to search filters
+ */
+async function parseNaturalLanguageSearchQuery(query) {
+  // For now, we'll implement a rule-based approach that handles common patterns
+  // In a production system, this would use a more sophisticated NLP model or LLM
+
+  const parsed = {
+    q: null,
+    minValue: null,
+    maxValue: null,
+    size: null,
+    condition: null,
+    brand: null,
+    category: null,
+    color: null
+  };
+
+  // Convert to lowercase for easier matching
+  const lowerQuery = query.toLowerCase();
+
+  // Extract price ranges (e.g., "under $50", "between $20 and $100", "under 50 credits")
+  const pricePatterns = [
+    { pattern: /under\s+\$?(\d+)/i, type: "max" },
+    { pattern: /below\s+\$?(\d+)/i, type: "max" },
+    { pattern: /less\s+than\s+\$?(\d+)/i, type: "max" },
+    { pattern: /over\s+\$?(\d+)/i, type: "min" },
+    { pattern: /above\s+\$?(\d+)/i, type: "min" },
+    { pattern: /more\s+than\s+\$?(\d+)/i, type: "min" },
+    { pattern: /between\s+\$?(\d+)\s+and\s+\$?(\d+)/i, type: "range" },
+    { pattern: /\$?(\d+)\s+to\s+\$?(\d+)/i, type: "range" }
+  ];
+
+  for (const { pattern, type } of pricePatterns) {
+    const match = lowerQuery.match(pattern);
+    if (match) {
+      if (type === "min") {
+        parsed.minValue = parseInt(match[1], 10);
+      } else if (type === "max") {
+        parsed.maxValue = parseInt(match[1], 10);
+      } else if (type === "range") {
+        parsed.minValue = parseInt(match[1], 10);
+        parsed.maxValue = parseInt(match[2], 10);
+      }
+      // Remove the matched part from query to avoid double-processing
+      query = query.replace(pattern[0], "");
+      break;
+    }
+  }
+
+  // Extract sizes (XS, S, M, L, XL, XXL, XXXL)
+  const sizeMatch = lowerQuery.match(/\b(xs|s|m|l|xl|xxl|xxxl)\b/i);
+  if (sizeMatch) {
+    parsed.size = sizeMatch[1].toUpperCase();
+  }
+
+  // Extract conditions
+  const conditions = ["new with tags", "new", "like new", "good", "fair"];
+  for (const condition of conditions) {
+    if (lowerQuery.includes(condition)) {
+      parsed.condition = condition;
+      break;
+    }
+  }
+
+  // If no specific condition matched, check for common variations
+  if (!parsed.condition) {
+    if (lowerQuery.includes("new")) parsed.condition = "new";
+    else if (lowerQuery.includes("like new")) parsed.condition = "like new";
+    else if (lowerQuery.includes("good")) parsed.condition = "good";
+    else if (lowerQuery.includes("fair")) parsed.condition = "fair";
+  }
+
+  // Extract brands (this is tricky without knowing all brands, but we can look for capitalized words)
+  // For simplicity, we'll look for words that might be brands (capitalized, not at start of sentence)
+  const words = query.split(/\s+/);
+  const potentialBrands = words.filter(word =>
+    /^[A-Z][a-z]+$/.test(word) &&
+    word !== "And" &&
+    word !== "The" &&
+    word !== "For" &&
+    word !== "With" &&
+    word.length > 2
+  );
+
+  if (potentialBrands.length > 0) {
+    // Take the first potential brand (could be improved with brand database lookup)
+    parsed.brand = potentialBrands[0];
+  }
+
+  // Extract categories
+  const categories = [
+    "t-shirts", "shirts & blouses", "tops", "knitwear & jumpers", "hoodies & sweatshirts",
+    "dresses", "skirts", "jeans", "trousers", "shorts", "bottoms",
+    "jackets & coats", "outerwear", "blazers & suits", "activewear", "swimwear",
+    "loungewear & sleepwear", "shoes", "sneakers", "boots", "bags", "accessories",
+    "jewellery", "hats & caps", "sunglasses", "watches", "vintage"
+  ];
+
+  for (const category of categories) {
+    if (lowerQuery.includes(category)) {
+      parsed.category = category;
+      break;
+    }
+  }
+
+  // Extract colors (basic colors)
+  const colors = [
+    "black", "white", "red", "blue", "green", "yellow", "orange", "purple",
+    "pink", "brown", "gray", "grey", "navy", "beige", "tan", "olive", "maroon"
+  ];
+
+  for (const color of colors) {
+    if (lowerQuery.includes(color)) {
+      parsed.color = color;
+      break;
+    }
+  }
+
+  // What remains is likely the general search query
+  // Remove all the extracted elements to isolate the core search terms
+  let remainingQuery = query;
+
+  // Remove price patterns
+  for (const { pattern } of pricePatterns) {
+    remainingQuery = remainingQuery.replace(pattern, "");
+  }
+
+  // Remove sizes
+  remainingQuery = remainingQuery.replace(/\b(xs|s|m|l|xl|xxl|xxxl)\b/gi, "");
+
+  // Remove conditions
+  for (const condition of conditions) {
+    remainingQuery = remainingQuery.replace(new RegExp(condition, "gi"), "");
+  }
+
+  // Remove categories
+  for (const category of categories) {
+    remainingQuery = remainingQuery.replace(new RegExp(category, "gi"), "");
+  }
+
+  // Remove colors
+  for (const color of colors) {
+    remainingQuery = remainingQuery.replace(new RegExp(color, "gi"), "");
+  }
+
+  // Clean up extra whitespace and return
+  remainingQuery = remainingQuery.replace(/\s+/g, " ").trim();
+
+  if (remainingQuery.length > 2) {
+    parsed.q = remainingQuery;
+  }
+
+  return parsed;
+}
 
 /** POST /api/listings/ai-suggest — vision model fills listing fields from a photo. */
 router.post("/ai-suggest", requireAuth, upload.single("image"), validateImageUpload, async (req, res, next) => {

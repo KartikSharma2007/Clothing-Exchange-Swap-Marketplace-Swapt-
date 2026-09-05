@@ -101,16 +101,43 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       return out;
     };
     return {
-      locale,
+      locale, // This is the raw locale from prefs, but we'll validate it in the d function
       currency,
       t,
       n: (value) => value.toLocaleString(locale),
-      d: (date, opts) => new Date(date).toLocaleDateString(locale, opts ?? { year: "numeric", month: "short", day: "numeric" }),
-      dt: (date) => new Date(date).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }),
-      money: (value, c) =>
-        c && c !== "credits"
-          ? new Intl.NumberFormat(locale, { style: "currency", currency: c }).format(value)
-          : `${value.toLocaleString(locale)} ${t("common.credits")}`,
+      d: (date, opts) => {
+        // Validate locale before using it
+        const validLocale = (typeof locale === "string" && locale.length >= 2) ? locale : "en-GB";
+        try {
+          return new Date(date).toLocaleDateString(validLocale, opts ?? { year: "numeric", month: "short", day: "numeric" });
+        } catch (e) {
+          // Fallback to en-GB if the locale is invalid
+          return new Date(date).toLocaleDateString("en-GB", opts ?? { year: "numeric", month: "short", day: "numeric" });
+        }
+      },
+      dt: (date) => {
+        // Validate locale before using it
+        const validLocale = (typeof locale === "string" && locale.length >= 2) ? locale : "en-GB";
+        try {
+          return new Date(date).toLocaleString(validLocale, { dateStyle: "medium", timeStyle: "short" });
+        } catch (e) {
+          // Fallback to en-GB if the locale is invalid
+          return new Date(date).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+        }
+      },
+      money: (value, c) => {
+        // Validate locale before using it
+        const validLocale = (typeof locale === "string" && locale.length >= 2) ? locale : "en-GB";
+        if (c && c !== "credits") {
+          try {
+            return new Intl.NumberFormat(validLocale, { style: "currency", currency: c }).format(value);
+          } catch (e) {
+            // Fallback to en-GB if the locale is invalid
+            return new Intl.NumberFormat("en-GB", { style: "currency", currency: c }).format(value);
+          }
+        }
+        return `${value.toLocaleString(validLocale)} ${t("common.credits")}`;
+      },
       ago: (date) => fmtRelative(t, date),
     };
   }, [lang, locale, currency]);
@@ -142,4 +169,34 @@ export function relativeTime(lang: string, date: string | number | Date): string
     return out;
   };
   return fmtRelative(t, date);
+}
+
+/** Safely format a date using locale from preferences, with fallback to en-GB */
+export function safeFormatDate(date: string | number | Date, opts?: Intl.DateTimeFormatOptions): string {
+  try {
+    const lang = localeFromPrefs();
+    // Basic validation: locale should be a string with reasonable length
+    if (typeof lang !== "string" || lang.length < 2) {
+      return new Date(date).toLocaleDateString("en-GB", opts);
+    }
+    return new Date(date).toLocaleDateString(lang, opts);
+  } catch (e) {
+    // Fallback to en-GB if anything goes wrong
+    return new Date(date).toLocaleDateString("en-GB", opts);
+  }
+}
+
+/** Safely format a date-time string using locale from preferences, with fallback to en-GB */
+export function safeFormatDateTime(date: string | number | Date): string {
+  try {
+    const lang = localeFromPrefs();
+    // Basic validation: locale should be a string with reasonable length
+    if (typeof lang !== "string" || lang.length < 2) {
+      return new Date(date).toLocaleString("en-GB");
+    }
+    return new Date(date).toLocaleString(lang);
+  } catch (e) {
+    // Fallback to en-GB if anything goes wrong
+    return new Date(date).toLocaleString("en-GB");
+  }
 }

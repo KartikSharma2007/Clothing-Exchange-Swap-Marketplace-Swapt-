@@ -32,8 +32,15 @@ router.post("/contact", contactLimiter, async (req, res, next) => {
     // Best-effort — a broken email provider should never fail the ticket itself.
     let accent = "red";
     try { const found = await User.findOne({ email: data.email }).select("accent"); if (found?.accent) accent = found.accent; } catch {}
-    void sendContactReceivedEmail(data.email, { ticketId, message: data.message, accent }).catch(() => {});
-    void sendContactAdminAlertEmail({ ...data, ticketId }).catch(() => {});
+    // We don't await these as they are not critical for the contact form submission, but we log any errors.
+    sendContactReceivedEmail(data.email, { ticketId, message: data.message, accent })
+      .catch((error) => {
+        console.error("[contact] Failed to send contact received email:", error.message);
+      });
+    sendContactAdminAlertEmail({ ...data, ticketId })
+      .catch((error) => {
+        console.error("[contact] Failed to send contact admin alert email:", error.message);
+      });
 
     res.status(201).json({ ok: true, ticketId });
   } catch (err) { next(err); }

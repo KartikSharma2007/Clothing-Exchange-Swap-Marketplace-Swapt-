@@ -15,6 +15,7 @@ const savedSearchSchema = new mongoose.Schema(
     g: { type: String, trim: true, maxlength: 20, default: "" },
     brand: { type: String, trim: true, maxlength: 60, default: "" },
     tag: { type: String, trim: true, maxlength: 20, default: "" },
+    material: { type: String, trim: true, maxlength: 40, default: "" },
     /** Optional location filter — alert only on items near this point. */
     lat: { type: Number, min: -90, max: 90, default: null },
     lng: { type: Number, min: -180, max: 180, default: null },

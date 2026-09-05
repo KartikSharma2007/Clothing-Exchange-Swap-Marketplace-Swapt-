@@ -111,7 +111,11 @@ router.post("/register", authLimiter, async (req, res, next) => {
     await createWelcomeNotification(user);
     // No verification step in this deployment (SMTP/Resend not configured) —
     // the account is live immediately, so welcome them right away.
-    void sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red").catch(() => {});
+    // We don't await this as it's not critical for user registration, but we log any errors
+    sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red")
+      .catch((error) => {
+        console.error("[auth] Failed to send welcome email:", error.message);
+      });
 
     const { token: refreshToken } = await issueRefreshToken(user, req);
     res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
@@ -170,7 +174,11 @@ router.post("/reset", authLimiter, async (req, res, next) => {
 
     // Security notice: whoever holds the inbox should know the password changed,
     // in case the reset request wasn't actually theirs.
-    void sendPasswordChangedEmail(user.email, { method: "the forgot-password link", accent: user.accent || "red" }).catch(() => {});
+    // We don't await this as it's not critical for password reset, but we log any errors
+    sendPasswordChangedEmail(user.email, { method: "the forgot-password link", accent: user.accent || "red"})
+      .catch((error) => {
+        console.error("[auth] Failed to send password changed email:", error.message);
+      });
 
     res.json({ ok: true });
   } catch (err) { next(err); }
@@ -230,7 +238,11 @@ router.get("/verify-email", authLimiter, async (req, res, next) => {
     user.emailVerifyExpiresAt = null;
     await user.save();
     await createWelcomeNotification(user);
-    void sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red").catch(() => {});
+    // We don't await this as it's not critical for email verification, but we log any errors
+    sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red")
+      .catch((error) => {
+        console.error("[auth] Failed to send welcome email after verification:", error.message);
+      });
 
     // Log the user in right away so "Go to dashboard" after verifying works
     // without a separate sign-in (their access token is returned below).
@@ -345,7 +357,11 @@ router.post("/google", authLimiter, async (req, res, next) => {
       });
       await user.save();
       await createWelcomeNotification(user);
-      void sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red").catch(() => {});
+      // We don't await this as it's not critical for Google signup, but we log any errors
+      sendWelcomeEmail(user.email, user.displayName || user.username, user.accent || "red")
+        .catch((error) => {
+          console.error("[auth] Failed to send welcome email after Google signup:", error.message);
+        });
     }
 
     if (user.status === "suspended") return res.status(403).json({ error: "This account is suspended" });
@@ -532,7 +548,11 @@ router.post("/password", requireAuth, async (req, res, next) => {
     // changed, in case the session doing this wasn't actually theirs.
     // Don't send "password changed" on first-time set for Google users who never had a password — they just created one.
     if (hasPassword) {
-      void sendPasswordChangedEmail(user.email, { method: "your account settings", accent: user.accent || "red" }).catch(() => {});
+      // We don't await this as it's not critical for password change, but we log any errors
+      sendPasswordChangedEmail(user.email, { method: "your account settings", accent: user.accent || "red"})
+        .catch((error) => {
+          console.error("[auth] Failed to send password changed email:", error.message);
+        });
     }
 
     res.json({ ok: true });
@@ -559,7 +579,13 @@ router.delete("/me", requireAuth, async (req, res, next) => {
     user.tokenVersion += 1;
     await user.save();
     await revokeAllForUser(user._id);
-    if (deletedEmail) void sendAccountDeletedEmail(deletedEmail, { username: deletedUsername, accent: deletedAccent }).catch(()=>{});
+    if (deletedEmail) {
+      // We don't await this as it's not critical for account deletion, but we log any errors
+      sendAccountDeletedEmail(deletedEmail, { username: deletedUsername, accent: deletedAccent })
+        .catch((error) => {
+          console.error("[auth] Failed to send account deleted email:", error.message);
+        });
+    }
     res.clearCookie(REFRESH_COOKIE, { ...refreshCookieOptions(), maxAge: undefined });
     res.json({ ok: true });
   } catch (err) { next(err); }

@@ -6,6 +6,7 @@ import { Footer } from "@/components/site/Footer";
 import { useWishlist, type BagItem } from "@/lib/wishlist";
 import { emptySearch } from "@/lib/taxonomy";
 import { toast } from "sonner";
+import { safeFormatDate } from "@/lib/i18n";
 
 export const Route = createFileRoute("/bag")({
   head: () => ({
@@ -34,12 +35,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 function formatDate(iso: string) {
-  let lang = "en-GB";
-  try {
-    const raw = window.localStorage.getItem("swapt.preferences");
-    if (raw) lang = (JSON.parse(raw) as { language?: string }).language ?? lang;
-  } catch { /* ignore */ }
-  return new Date(iso).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+  return safeFormatDate(new Date(iso), { day: "numeric", month: "short", year: "numeric" });
 }
 
 function BagPage() {
