@@ -72,7 +72,7 @@ export function uploadBuffer(buffer, { folder = FOLDER, filename } = {}) {
  * When assets are private (authenticated) the Cloudinary URL is signed and
  * short-lived, so embedding it directly would let cached pages go stale.
  * Instead we return a *stable* URL to our media-proxy endpoint
- * (`/api/images/:publicId`) — the proxy issues a fresh signature on every
+ * (`/api/assets/images/:publicId`) — the proxy issues a fresh signature on every
  * request and 302-redirects, so the client never caches an expired signature.
  * When assets are public we hand back the plain Cloudinary URL as before.
  */
@@ -87,7 +87,7 @@ export function signedUrl(publicId, { width } = {}) {
   const qs = new URLSearchParams();
   if (width) qs.set("w", String(width));
   const suffix = qs.toString();
-  return `${API_ORIGIN}/api/images/${encodeURIComponent(publicId)}${suffix ? `?${suffix}` : ""}`;
+  return `${API_ORIGIN}/api/assets/images/${encodeURIComponent(publicId)}${suffix ? `?${suffix}` : ""}`;
 }
 
 /**
@@ -131,7 +131,7 @@ export function signEvidenceUrl(publicId, { width } = {}) {
   const sig = crypto.createHmac("sha256", ASSET_TOKEN_SECRET).update(`${publicId}:${exp}`).digest("hex");
   const qs = new URLSearchParams({ sig, exp });
   if (width) qs.set("w", String(width));
-  return `${API_ORIGIN}/api/images/${encodeURIComponent(publicId)}?${qs.toString()}`;
+  return `${API_ORIGIN}/api/assets/images/${encodeURIComponent(publicId)}?${qs.toString()}`;
 }
 
 /** Verify the HMAC token on an evidence proxy URL (also checks expiry). */

@@ -263,7 +263,7 @@ const SPORTS_BRANDS = ["Nike", "Adidas", "Patagonia", "The North Face", "Puma", 
 router.get("/", async (req, res, next) => {
   try {
     await expireStaleBoosts();
-    const { q, cat, size, condition, g, brand, tag, sort, page, limit, lat, lng, radiusKm, meetupOnly, minValue, maxValue } = listQuerySchema.parse(req.query);
+    const { q, cat, size, condition, g, brand, tag, material, sort, page, limit, lat, lng, radiusKm, meetupOnly, minValue, maxValue } = listQuerySchema.parse(req.query);
 
     // Only approved active listings are discoverable — draft/scheduled/flagged are hidden until published/approved.
     const filter = { status: "active", moderationStatus: { $nin: ["flagged", "rejected", "pending"] } };
