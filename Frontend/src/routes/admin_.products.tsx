@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useEffect } from "react";
 import { X } from "lucide-react";
+import { useRouter } from "@tanstack/react-router";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Btn, Empty, Pagination, SearchInput, Table, Toolbar, Modal, Field, inputClass } from "@/components/admin/ui";
 import { fetchAdminListings, toggleFeature, setListingStatus, removeListing, type AdminListing, type AdminQuery } from "@/lib/admin-api";
@@ -29,6 +30,7 @@ function ProductsPage() {
   const [confirm, setConfirm] = useState<ConfirmState | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [query, setQuery] = useState<AdminQuery>({ q: "", status: "all" });
+  const router = useRouter();
   const { data, isLoading } = useQuery({ queryKey: ["admin", "listings", query], queryFn: () => fetchAdminListings(query) });
 
   const { data: detailResp, isLoading: isDetailLoading } = useQuery({
@@ -173,6 +175,7 @@ function ProductsPage() {
                   <Btn onClick={() => setConfirm({ type: "feature", listing: l })}>{l.featured ? "Unfeature" : "Feature"}</Btn>
                   <Btn variant="danger" onClick={() => setConfirm({ type: "delete", listing: l })}>Delete</Btn>
                   <Btn onClick={() => setDetailForListing(l)}>See details</Btn>
+                  <Btn onClick={() => router.navigate({ to: `/edit-listing/${l.id}` })}>Edit</Btn>
                 </div>
               </td>
             </tr>

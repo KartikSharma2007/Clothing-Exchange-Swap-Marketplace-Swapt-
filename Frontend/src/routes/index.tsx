@@ -12,6 +12,10 @@ import { PriceTiles } from "@/components/site/PriceTiles";
 import { Footer } from "@/components/site/Footer";
 import { ListingCard } from "@/components/site/ListingCard";
 import { ImpactCard } from "@/components/site/ImpactCard";
+import { RecentSwaps } from "@/components/site/RecentSwaps";
+import { FeaturedSellers } from "@/components/site/FeaturedSellers";
+import { SeasonalPicks } from "@/components/site/SeasonalPicks";
+import { NewArrivals } from "@/components/site/NewArrivals";
 import { fetchRecommended, fetchPopular } from "@/lib/recommendations-api";
 import { useAuth } from "@/lib/auth-context";
 import { readRecentlyViewed } from "@/lib/recently-viewed";
@@ -98,6 +102,9 @@ function Home() {
           </section>
         )}
         <PopularBrands />
+        <FeaturedSellers />
+        <SeasonalPicks />
+        <NewArrivals />
         {user && analytics.data && (
           <section className="mx-auto max-w-[1400px] px-4 py-6 md:px-8">
             <div className="mx-auto max-w-2xl">
@@ -128,6 +135,7 @@ function Home() {
         </section>
         <RecentlyViewed />
         <PopularWeek />
+        <RecentSwaps />
         <PriceTiles />
       </main>
       <Footer />

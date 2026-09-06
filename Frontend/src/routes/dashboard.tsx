@@ -104,7 +104,6 @@ function DashboardPage() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cropFile, setCropFile] = useState<File | null>(null);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const { refresh } = useAuth();
 
@@ -114,7 +113,6 @@ function DashboardPage() {
       await refresh();
       setShowAvatarModal(false);
       setCropFile(null);
-      setAvatarError(null);
       toast.success("Profile photo updated");
     },
     onError: (err) => {
@@ -454,12 +452,19 @@ function DashboardPage() {
                     </div>
                   )}
                 </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileRef}
+                  onChange={onFileChange}
+                  className="hidden"
+                />
 
                 {/* Buttons container */}
                 <div className="flex items-center justify-center space-x-3 sm:space-x-4">
                   {/* Close button */}
                   <button aria-label="Close" onClick={() => setShowAvatarModal(false)} className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-transparent bg-transparent flex items-center justify-center hover:bg-muted/50 text-foreground/70">
-                    <X className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" />
+                    <X className="h-4 w-4 sm:h-5 sm:w-5 text-foreground/70" />
                   </button>
 
                   {/* Three-dot menu button */}
@@ -469,7 +474,7 @@ function DashboardPage() {
                       onClick={() => setMenuOpen((s) => !s)}
                       aria-label="Photo menu"
                     >
-                      <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" />
+                      <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 text-foreground/70" />
                     </button>
 
                     {menuOpen && (
@@ -478,13 +483,13 @@ function DashboardPage() {
                           className="flex w-full items-center gap-2 sm:gap-2.5 rounded-md px-2 sm:px-2.5 py-2 sm:py-2.5 text-sm sm:text-base hover:bg-muted/50"
                           onClick={() => { setMenuOpen(false); fileRef.current?.click(); }}
                         >
-                          <Camera className="h-4 w-4 sm:h-5 sm:w-5" className="text-foreground/70" /> Change photo
+                          <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-foreground/70" /> Change photo
                         </button>
                         <button
                           className="flex w-full items-center gap-2 sm:gap-2.5 rounded-md px-2 sm:px-2.5 py-2 sm:py-2.5 text-sm text-red-600/50 sm:text-base hover:bg-red-50/50"
                           onClick={() => { setMenuOpen(false); onRemove(); }}
                         >
-                          <Trash2 className="h-5 w-5" className="text-red-600" /> Remove photo
+                          <Trash2 className="h-5 w-5 text-red-600" /> Remove photo
                         </button>
                       </div>
                     )}
@@ -953,7 +958,7 @@ function MyListings({ items, loading, filter, onFilterChange }: {
       {filtered.length === 0 ? (
         <EmptyState title="No matching listings" body="Try a different search or status filter." />
       ) : (
-        <div className="grid grid-cols-2 gap-4 max-md:gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 max-md:gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 lg:gap-6 xl:gap-8">
           {filtered.map((l) => (
             <div key={l.id} className="group">
               <Link to="/listing/$id" params={{ id: l.id }}>
@@ -978,7 +983,7 @@ function MyListings({ items, loading, filter, onFilterChange }: {
                   <p className="truncate text-xs text-foreground/60">{l.brand} · size {l.size} · {timeAgo(l.createdAt)}</p>
                 </div>
               </Link>
-              <div className="mt-1.5 flex items-center gap-1.5 px-0.5 max-md:grid max-md:grid-cols-3 max-md:gap-1.5">
+              <div className="mt-1.5 flex items-center gap-4 px-0.5 max-md:grid max-md:grid-cols-3 max-md:gap-1.5 md:grid md:grid-cols-3 md:gap-2">
                 {(l.status === "active" || l.status === "hidden") && (
                   <button
                     type="button"
