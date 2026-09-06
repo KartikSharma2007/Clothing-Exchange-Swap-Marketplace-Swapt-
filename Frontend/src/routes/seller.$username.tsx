@@ -36,7 +36,7 @@ import { api, apiEnabled } from "@/lib/api";
 import { proposeSwap, startConversation } from "@/lib/swap-api";
 import { muteUser, unmuteUser } from "@/lib/moderation-api";
 import { cn } from "@/lib/utils";
-import { localeFromPrefs } from "@/lib/i18n";
+import { safeFormatDate } from "@/lib/i18n";
 import { toast } from "sonner";
 
 const TABS = [
@@ -103,7 +103,7 @@ function ReviewCard({ review }: { review: Review }) {
         <div>
           <p className="font-semibold text-foreground">{review.author.name}</p>
           <p className="text-xs text-foreground/50">
-            @{review.author.username} · {new Date(review.createdAt).toLocaleDateString(localeFromPrefs())}
+            @{review.author.username} · {safeFormatDate(review.createdAt)}
           </p>
         </div>
       </div>
@@ -164,7 +164,7 @@ function SwapSide({
 
 function SwapCard({ swap }: { swap: SwapHistory }) {
   const when = swap.date
-    ? new Date(swap.date).toLocaleDateString(localeFromPrefs(), { month: "short", year: "numeric" })
+    ? safeFormatDate(swap.date, { month: "short", year: "numeric" })
     : "";
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
@@ -810,7 +810,7 @@ function SellerProfilePage() {
                 <MapPin className="h-4 w-4 text-foreground/50" /> {user.location || "Location not set"}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-foreground/50" /> Member since {new Date(user.createdAt).toLocaleDateString(localeFromPrefs(), { month: "short", year: "numeric" })}
+                <Users className="h-4 w-4 text-foreground/50" /> Member since {safeFormatDate(user.createdAt, { month: "short", year: "numeric" })}
               </span>
             </div>
 
@@ -1046,7 +1046,7 @@ function SellerProfilePage() {
                       </div>
                       <div className="flex items-center gap-3 rounded-xl bg-muted/60 p-3 max-md:rounded-2xl">
                         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-500/10 text-emerald-600"><Users className="h-4 w-4" /></span>
-                        <span className="min-w-0"><span className="block text-[10px] font-black uppercase tracking-wider text-foreground/45">Member since</span><span className="block truncate text-sm font-bold text-foreground">{new Date(user.createdAt).toLocaleDateString(localeFromPrefs(), { month: "short", year: "numeric" })}</span></span>
+                        <span className="min-w-0"><span className="block text-[10px] font-black uppercase tracking-wider text-foreground/45">Member since</span><span className="block truncate text-sm font-bold text-foreground">{safeFormatDate(user.createdAt, { month: "short", year: "numeric" })}</span></span>
                       </div>
                     </div>
                   </div>
